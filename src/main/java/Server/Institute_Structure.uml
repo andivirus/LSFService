@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="684.9745762711865" y="30.52259887005647">Server.Institute.Veranstaltung</node>
+    <node x="0.0" y="0.0">Server.Institute.Termin</node>
+    <node x="141.0" y="726.0">Server.Institute.Institute</node>
+    <node x="132.5" y="572.0">Server.Institute.Studiengang</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="Server.Institute.Studiengang" target="Server.Institute.Veranstaltung">
+      <point x="0.0" y="-52.0" />
+      <point x="0.0" y="76.0" />
+    </edge>
+    <edge source="Server.Institute.Veranstaltung" target="Server.Institute.Termin">
+      <point x="0.0" y="-76.0" />
+      <point x="0.0" y="160.0" />
+    </edge>
+    <edge source="Server.Institute.Institute" target="Server.Institute.Studiengang">
+      <point x="0.0" y="-64.0" />
+      <point x="0.0" y="52.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.8100686498855835" x="278.0" y="437.00000000000006" />
+  <SelectedNodes>
+    <node>Server.Institute.Veranstaltung</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Constructors</Category>
+    <Category>Methods</Category>
+    <Category>Properties</Category>
+    <Category>Inner Classes</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

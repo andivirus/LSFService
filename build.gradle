@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group 'com.ivashutin'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation 'org.glassfish.jersey.containers:jersey-container-servlet:2.27'
+    implementation 'org.glassfish.jersey.containers:jersey-container-jdk-http:2.27'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.27'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
+    implementation 'org.glassfish.jersey.media:jersey-media-jaxb:2.27'
+    implementation 'org.jsoup:jsoup:1.11.3'
+    implementation 'org.xerial:sqlite-jdbc:3.21.0.1'
+}
