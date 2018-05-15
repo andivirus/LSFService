@@ -1,15 +1,3 @@
 Manifest-Version: 1.0
-Class-Path: javax.ws.rs-api-2.1.jar jersey-server-2.27.jar jersey-cont
- ainer-servlet-core-2.27.jar jersey-common-2.27.jar jersey-media-json-
- jackson-2.27.jar jersey-hk2-2.27.jar hk2-utils-2.5.0-b42.jar jackson-
- module-jaxb-annotations-2.8.10.jar javassist-3.22.0-CR2.jar javax.ann
- otation-api-1.2.jar jackson-annotations-2.8.10.jar hk2-api-2.5.0-b42.
- jar jersey-client-2.27.jar hk2-locator-2.5.0-b42.jar jersey-media-jax
- b-2.27.jar javax.inject-1.jar jackson-databind-2.8.10.jar jersey-cont
- ainer-jdk-http-2.27.jar javax.inject-2.5.0-b42.jar sqlite-jdbc-3.21.0
- .1.jar osgi-resource-locator-1.0.1.jar aopalliance-repackaged-2.5.0-b
- 42.jar jersey-entity-filtering-2.27.jar jersey-container-servlet-2.27
- .jar junit-4.12.jar validation-api-1.1.0.Final.jar jackson-core-2.8.1
- 0.jar jsoup-1.11.3.jar hamcrest-core-1.3.jar
 Main-Class: Server.RestServerStarter
 

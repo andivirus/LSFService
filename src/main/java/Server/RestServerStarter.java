@@ -5,8 +5,8 @@ import Server.Institute.Studiengang;
 import Server.Institute.Termin;
 import Server.Institute.Veranstaltung;
 import com.sun.net.httpserver.HttpServer;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.File;
@@ -28,8 +28,7 @@ public class RestServerStarter {
     public static final String DB_URL = "jdbc:sqlite:./database/lsf.db";
 
     public static void main(String[] args) {
-        //ResourceConfig rc = new ResourceConfig(MessageResource.class);
-        RestServerStarter restServerStarter = new RestServerStarter();
+        new RestServerStarter();
     }
 
     public RestServerStarter(){
@@ -56,15 +55,14 @@ public class RestServerStarter {
 
             putIntoDatabase();
 
-            ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class);
+            ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
 
-
-            resourceConfig.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER, "FINEST");
             try {
                 System.out.println("Starting Server");
-                URI uri = new URI("http://andpi.dyn.mcl.gg:8090/");
+                URI uri = new URI("http://localhost:8090/");
                 HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
                 System.out.println("Server started at Port " + httpServer.getAddress().getPort());
+
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
