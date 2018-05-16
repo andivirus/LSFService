@@ -33,6 +33,7 @@ public class RestServerStarter {
 
     public RestServerStarter(){
         try {
+            long begin = System.currentTimeMillis();
             createDatabase();
             hs = new HSWorms();
             instituteList = new LinkedList<>();
@@ -47,14 +48,39 @@ public class RestServerStarter {
                 System.out.println(stdg);
                 veranstaltungList.addAll(hs.getLectures(stdg.getId()));
             }
+
+            Set<Thread> threaders = new HashSet<>();
+            int i = 0;
+            for (List<Veranstaltung> vlist:
+                 split(veranstaltungList, 4)) {
+                        threaders.add(new Thread(new Threader(vlist, i)));
+                        i++;
+            }
+            for (Thread t :
+                    threaders) {
+                t.run();
+            }
+            for (Thread t :
+                    threaders) {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            /*
             for (Veranstaltung va :
                     veranstaltungList) {
                 System.out.println(va);
                 terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
             }
+            */
 
             putIntoDatabase();
 
+            long end = System.currentTimeMillis();
+
+            System.out.println("This took: " + (end-begin)/1000);
             ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
 
             try {
@@ -91,7 +117,7 @@ public class RestServerStarter {
 
             statement.addBatch("CREATE TABLE IF NOT EXISTS Veranstaltung(" +
                     "id INTEGER, stdgid INTEGER, instituteid VARCHAR, Name VARCHAR," +
-                    "PRIMARY KEY (instituteid, id), " +
+                    "PRIMARY KEY (instituteid, id, stdgid), " +
                     "FOREIGN KEY (stdgid) REFERENCES Studiengaenge(id)," +
                     "FOREIGN KEY (instituteid) REFERENCES Institutes(id))");
 
@@ -142,16 +168,22 @@ public class RestServerStarter {
             }
             statement.executeBatch();
             statement.close();
+            connection.commit();
 
             System.out.println(veranstaltungList.size());
+            Set<Veranstaltung> veranstaltungSet = new HashSet<>();
+            veranstaltungSet.addAll(veranstaltungList);
+            System.out.println(veranstaltungSet.size());
             statement = connection.prepareStatement("INSERT OR REPLACE INTO Veranstaltung VALUES (?, ?, ?, ?)");
+            int i = 0;
             for (Veranstaltung v :
-                    veranstaltungList) {
+                    veranstaltungSet) {
                 statement.setInt(1, v.getId());
                 statement.setInt(2, v.getStdid());
                 statement.setString(3, v.getInstituteid());
                 statement.setString(4, v.getName());
                 statement.addBatch();
+                //System.out.println("veranstaltungList" + i);
             }
             statement.executeBatch();
             statement.close();
@@ -160,7 +192,6 @@ public class RestServerStarter {
             statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
             for (Termin t :
                     terminList) {
-                System.out.println(t);
                 statement.setInt(1, t.getId());
                 statement.setInt(2, t.getRowid());
                 statement.setString(3, t.getFach());
@@ -184,6 +215,35 @@ public class RestServerStarter {
             System.out.println("Finished putting data into database!");
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private <T> List<List<T>> split(List<T> list, final int number){
+        List<List<T>> parts = new ArrayList<>();
+        final int size = list.size();
+        final int length = list.size()/number;
+        for (int i = 0; i < size; i += length) {
+            parts.add(new ArrayList<>(list.subList(i, Math.min(size, i + length))));
+        }
+
+        return parts;
+    }
+
+    private class Threader implements Runnable{
+        List<Veranstaltung> innerVeranstaltungList;
+
+        public Threader(List<Veranstaltung> list, final int i){
+            innerVeranstaltungList = list;
+            System.out.println("THREAD " + i);
+        }
+
+        @Override
+        public void run() {
+            for (Veranstaltung va :
+                    innerVeranstaltungList) {
+                terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
+            }
+
         }
     }
 }
