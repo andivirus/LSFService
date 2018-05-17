@@ -43,17 +43,34 @@ public class RestServerStarter {
 
             instituteList.add(hs.getInstitue());
             studiengangList.addAll(hs.getCurriculli());
-            for (Studiengang stdg :
-                    studiengangList) {
-                System.out.println(stdg);
-                veranstaltungList.addAll(hs.getLectures(stdg.getId()));
-            }
 
             Set<Thread> threaders = new HashSet<>();
             int i = 0;
+            for (List<Studiengang> split:
+            split(studiengangList, 4)){
+                threaders.add(new Thread(new GenericThreader(split, i)));
+                i++;
+            }
+            System.out.println(threaders.size());
+            for (Thread t :
+                    threaders) {
+                t.run();
+            }
+            for (Thread t :
+                    threaders) {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // Termine bekommen
+            threaders.clear();
+            i = 0;
             for (List<Veranstaltung> vlist:
                  split(veranstaltungList, 4)) {
-                        threaders.add(new Thread(new Threader(vlist, i)));
+                        threaders.add(new Thread(new GenericThreader(vlist, i)));
                         i++;
             }
             for (Thread t :
@@ -68,13 +85,6 @@ public class RestServerStarter {
                     e.printStackTrace();
                 }
             }
-            /*
-            for (Veranstaltung va :
-                    veranstaltungList) {
-                System.out.println(va);
-                terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
-            }
-            */
 
             putIntoDatabase();
 
@@ -156,6 +166,7 @@ public class RestServerStarter {
             }
             statement.executeBatch();
             statement.close();
+            connection.commit();
 
             System.out.println(studiengangList.size());
             statement = connection.prepareStatement("INSERT OR REPLACE INTO Studiengaenge VALUES (?, ?, ?)");
@@ -175,7 +186,6 @@ public class RestServerStarter {
             veranstaltungSet.addAll(veranstaltungList);
             System.out.println(veranstaltungSet.size());
             statement = connection.prepareStatement("INSERT OR REPLACE INTO Veranstaltung VALUES (?, ?, ?, ?)");
-            int i = 0;
             for (Veranstaltung v :
                     veranstaltungSet) {
                 statement.setInt(1, v.getId());
@@ -183,10 +193,10 @@ public class RestServerStarter {
                 statement.setString(3, v.getInstituteid());
                 statement.setString(4, v.getName());
                 statement.addBatch();
-                //System.out.println("veranstaltungList" + i);
             }
             statement.executeBatch();
             statement.close();
+            connection.commit();
 
             System.out.println(terminList.size());
             statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -220,30 +230,60 @@ public class RestServerStarter {
 
     private <T> List<List<T>> split(List<T> list, final int number){
         List<List<T>> parts = new ArrayList<>();
+        /*
         final int size = list.size();
         final int length = list.size()/number;
         for (int i = 0; i < size; i += length) {
             parts.add(new ArrayList<>(list.subList(i, Math.min(size, i + length))));
+            System.out.println("LENGTH: " + length);
+        }
+        */
+        int size = (int) Math.ceil(list.size() / number);
+        System.out.println(size);
+        for (int start = 0; start < list.size(); start += size) {
+            int end = Math.min(start + size, list.size());
+            List<T> sublist = list.subList(start, end);
+            parts.add(new ArrayList<>(sublist));
         }
 
+        System.out.println(parts.size());
         return parts;
     }
 
-    private class Threader implements Runnable{
-        List<Veranstaltung> innerVeranstaltungList;
+    private class GenericThreader implements Runnable{
+        List<?> innerCollection;
 
-        public Threader(List<Veranstaltung> list, final int i){
-            innerVeranstaltungList = list;
-            System.out.println("THREAD " + i);
+        public GenericThreader(List<?> list, final int i){
+            innerCollection = list;
+            System.out.println("GenericThread " + i);
         }
 
         @Override
-        public void run() {
-            for (Veranstaltung va :
-                    innerVeranstaltungList) {
-                terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
+        public void run(){
+            final int STUDIENGANG = 0;
+            final int VERANSTALTUNG = 1;
+            int type = -1;
+            for (Object o :
+                    innerCollection) {
+                if(o instanceof Studiengang){
+                    type = STUDIENGANG;
+                }
+                else if (o instanceof Veranstaltung){
+                    type = VERANSTALTUNG;
+                }
+                break;
             }
-
+            for (Object o :
+                    innerCollection) {
+                if(type == STUDIENGANG){
+                    Studiengang s = (Studiengang) o;
+                    veranstaltungList.addAll(hs.getLectures(s.getId()));
+                }
+                if(type == VERANSTALTUNG){
+                    Veranstaltung va = (Veranstaltung) o;
+                    terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
+                }
+            }
         }
     }
 }
