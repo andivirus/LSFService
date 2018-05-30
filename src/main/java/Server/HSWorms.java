@@ -56,33 +56,39 @@ public class HSWorms {
         Element element = connection.body();
         Elements link = element.getElementsContainingOwnText("Studiengangpläne (Liste)");
         if(!link.isEmpty()) {
-            try {
+            for (int count = 0; count < 5; count++) {
 
-                Document currlistpage = Jsoup.connect(link.get(0).attr("href")).get();
+                try {
 
-                element = currlistpage.body().selectFirst("table[summary=List of rooms] > tbody");
+                    Document currlistpage = Jsoup.connect(link.get(0).attr("href")).get();
 
-                List<Studiengang> list = new LinkedList<>();
-                Elements reihen = element.getElementsByTag("tr");
+                    element = currlistpage.body().selectFirst("table[summary=List of rooms] > tbody");
 
-                for (Element reihe :
-                        reihen) {
+                    List<Studiengang> list = new LinkedList<>();
+                    Elements reihen = element.getElementsByTag("tr");
 
-                    Elements spalten = reihe.getElementsByTag("td");
-                    String name = spalten.first().text();
-                    String id = spalten.last().child(0).attr("href");
+                    for (Element reihe :
+                            reihen) {
 
-                    Pattern pattern = Pattern.compile("abstgvnr=([0-9]*)");
-                    Matcher matcher = pattern.matcher(id);
-                    if(matcher.find()){
-                        id = matcher.group(1);
+                        Elements spalten = reihe.getElementsByTag("td");
+                        String name = spalten.first().text();
+                        String id = spalten.last().child(0).attr("href");
+
+                        Pattern pattern = Pattern.compile("abstgvnr=([0-9]*)");
+                        Matcher matcher = pattern.matcher(id);
+                        if(matcher.find()){
+                            id = matcher.group(1);
+                        }
+                        list.add(new Studiengang(Integer.parseInt(id), name, instituteid));
                     }
-                    list.add(new Studiengang(Integer.parseInt(id), name, instituteid));
-                }
 
-                return list;
-            } catch (IOException e) {
-                e.printStackTrace();
+                    return list;
+                }
+                catch (IOException e) {
+                    if(count == 4){
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         throw new IOException("Seite mit Studiengangplänen nicht gefunden");
@@ -99,32 +105,36 @@ public class HSWorms {
                 "&k_abstgv.abstgvnr=" + stdgid + "&act=stg" +
                 "&pool=stg&show=liste&P.vx=kurz&P.subc=plan";
 
-        try {
-            Document lecturespage = Jsoup.connect(url).get();
+        for (int count = 0; count < 5; count++) {
+            try {
+                Document lecturespage = Jsoup.connect(url).get();
 
-            Elements reihen = lecturespage.body().select("table[summary*=Veranstaltungen] > tbody > tr");
-            List<Veranstaltung> veranstaltungList = new LinkedList<>();
-            reihen.remove(0);
+                Elements reihen = lecturespage.body().select("table[summary*=Veranstaltungen] > tbody > tr");
+                List<Veranstaltung> veranstaltungList = new LinkedList<>();
+                reihen.remove(0);
 
-            for (Element reihe :
-                    reihen) {
+                for (Element reihe :
+                        reihen) {
 
-                Elements spalten = reihe.children();
-                Pattern pattern = Pattern.compile("publishid=([0-9]*)");
-                Matcher matcher = pattern.matcher(spalten.get(1).child(0).attr("href"));
+                    Elements spalten = reihe.children();
+                    Pattern pattern = Pattern.compile("publishid=([0-9]*)");
+                    Matcher matcher = pattern.matcher(spalten.get(1).child(0).attr("href"));
 
-                int id;
+                    int id;
 
-                if(matcher.find()){
-                    id = Integer.valueOf(matcher.group(1));
-                    String name = spalten.get(1).text();
+                    if(matcher.find()){
+                        id = Integer.valueOf(matcher.group(1));
+                        String name = spalten.get(1).text();
 
-                    veranstaltungList.add(new Veranstaltung(id, instituteid, stdgid, name));
+                        veranstaltungList.add(new Veranstaltung(id, instituteid, stdgid, name));
+                    }
+                }
+                return veranstaltungList;
+            } catch (IOException e) {
+                if(count == 4) {
+                    e.printStackTrace();
                 }
             }
-            return veranstaltungList;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -142,6 +152,7 @@ public class HSWorms {
 
 
         for(int count = 0; count < 5; count++) {
+            System.out.println("Trying for the " + count + " time");
             try {
                 Element body = Jsoup.connect(url).get().body();
                 Elements tables = body.select("form > table[summary*=Veranstaltungstermine]");
@@ -153,12 +164,14 @@ public class HSWorms {
                         tables) {
                     termingruppe++;
                     Elements data = gruppe.select("tbody > tr:not(:first-child)");
+                    String art = gruppe.select(".t_capt").text().replace("Termine Gruppe: ", "").trim();
                     int rowid = 0;
                     for (Element zeile :
                             data) {
                         rowid++;
                         int spaltenindex = 0;
                         TerminHelper terminHelper = new TerminHelper();
+                        terminHelper.art = art;
                         terminHelper.fach = vaname;
                         terminHelper.rowid = rowid;
                         for (Element spalte :
@@ -203,7 +216,9 @@ public class HSWorms {
                 }
                 return termine;
             } catch (IOException e) {
-                e.printStackTrace();
+                if(count == 4) {
+                    e.printStackTrace();
+                }
             }
         }
         return null;

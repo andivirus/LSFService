@@ -4,6 +4,7 @@ import Server.Institute.Institute;
 import Server.Institute.Studiengang;
 import Server.Institute.Termin;
 import Server.Institute.Veranstaltung;
+import Server.Util.Threading.ThreadCreator;
 import com.sun.net.httpserver.HttpServer;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -32,61 +33,41 @@ public class RestServerStarter {
     }
 
     public RestServerStarter(){
+        createDatabase();
         try {
             long begin = System.currentTimeMillis();
-            createDatabase();
-            hs = new HSWorms();
-            instituteList = new LinkedList<>();
-            studiengangList = new LinkedList<>();
-            veranstaltungList = new LinkedList<>();
-            terminList = new LinkedList<>();
 
-            instituteList.add(hs.getInstitue());
-            studiengangList.addAll(hs.getCurriculli());
-
-            Set<Thread> threaders = new HashSet<>();
-            int i = 0;
-            for (List<Studiengang> split:
-            split(studiengangList, 4)){
-                threaders.add(new Thread(new GenericThreader(split, i)));
-                i++;
-            }
-            System.out.println(threaders.size());
-            for (Thread t :
-                    threaders) {
-                t.run();
-            }
-            for (Thread t :
-                    threaders) {
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            try {
+                Connection connection = DriverManager.getConnection(DB_URL);
+                Statement statement = connection.createStatement();
+                ResultSet rowcountset = statement.executeQuery("SELECT COUNT(*) as rowcount FROM Settings");
+                rowcountset.next();
+                int rowcount = rowcountset.getInt("rowcount");
+                statement.close();
+                if (rowcount != 0) {
+                    Statement lastupdate = connection.createStatement();
+                    ResultSet resultSet = lastupdate.executeQuery("SELECT LastUpdate FROM Settings");
+                    while (resultSet.next()) {
+                        System.out.println("LastUpdate: " + resultSet.getTimestamp(1).toString());
+                        System.out.println("Current Time:  " + new java.util.Date().toString());
+                        if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000)) {
+                            System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
+                            System.out.println("Skipping Database input");
+                            lastupdate.close();
+                        } else {
+                            System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
+                            lastupdate.close();
+                            initDatabase();
+                        }
+                    }
                 }
-            }
-
-            // Termine bekommen
-            threaders.clear();
-            i = 0;
-            for (List<Veranstaltung> vlist:
-                 split(veranstaltungList, 4)) {
-                        threaders.add(new Thread(new GenericThreader(vlist, i)));
-                        i++;
-            }
-            for (Thread t :
-                    threaders) {
-                t.run();
-            }
-            for (Thread t :
-                    threaders) {
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                else {
+                    initDatabase();
                 }
-            }
-
-            putIntoDatabase();
+                }catch(SQLException e){
+                    e.printStackTrace();
+                    System.out.println("SQLException: SKIPPED");
+                }
 
             long end = System.currentTimeMillis();
 
@@ -107,6 +88,24 @@ public class RestServerStarter {
         }
     }
 
+    private void initDatabase() throws IOException {
+        System.out.println("Scraping Data for Database");
+        hs = new HSWorms();
+        instituteList = new LinkedList<>();
+        studiengangList = new LinkedList<>();
+        veranstaltungList = new LinkedList<>();
+        terminList = new LinkedList<>();
+
+        instituteList.add(hs.getInstitue());
+        studiengangList.addAll(hs.getCurriculli());
+
+        ThreadCreator threadCreator = ThreadCreator.instantiate();
+        threadCreator.doJob(studiengangList);
+        threadCreator.doJob(veranstaltungList);
+
+        putIntoDatabase();
+    }
+
     private void createDatabase(){
         File dir = new File("database");
         dir.mkdir();
@@ -117,6 +116,10 @@ public class RestServerStarter {
             connection = DriverManager.getConnection(DB_URL);
             statement = connection.createStatement();
             connection.setAutoCommit(false);
+
+            statement.addBatch("CREATE TABLE IF NOT EXISTS Settings(" +
+                    "LastUpdate TIMESTAMP, id INTEGER, " +
+                    "PRIMARY KEY (id))");
 
             statement.addBatch("CREATE TABLE IF NOT EXISTS Institutes(" +
                     "Name Varchar(60), id Varchar(20), PRIMARY KEY (id))");
@@ -136,13 +139,15 @@ public class RestServerStarter {
                     "start_zeit TIMESTAMP, end_zeit TIMESTAMP," +
                     "start_datum DATE, end_datum DATE," +
                     "raum VARCHAR, prof VARCHAR, bemerkung VARCHAR, art VARCHAR, ausfall VARCHAR, " +
-                    "PRIMARY KEY (terminid, fach, rowid), FOREIGN KEY (fach) REFERENCES Veranstaltung(Name))");
+                    "FOREIGN KEY (fach) REFERENCES Veranstaltung(Name))");
 
             statement.addBatch("CREATE VIEW IF NOT EXISTS VLTERMIN AS " +
                     "SELECT * FROM Veranstaltung JOIN Termin ON Veranstaltung.Name = Termin.fach");
 
+
             statement.executeBatch();
             statement.close();
+
             connection.commit();
 
         } catch (SQLException e) {
@@ -151,11 +156,15 @@ public class RestServerStarter {
     }
 
     private void putIntoDatabase(){
-        System.out.println("Putting data into database...");
         try {
             Connection connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(false);
-            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Institutes VALUES (?, ?)");
+            System.out.println("Putting data into database...");
+
+            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Settings VALUES (?, 1)");
+            statement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+
+            statement = connection.prepareStatement("INSERT OR REPLACE INTO Institutes VALUES (?, ?)");
 
             System.out.println(instituteList.size());
             for (Institute i :
@@ -221,6 +230,11 @@ public class RestServerStarter {
             }
             statement.executeBatch();
             statement.close();
+
+            statement = connection.prepareStatement("INSERT OR REPLACE INTO Settings VALUES (?, 1)");
+            statement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            statement.executeUpdate();
+            statement.close();
             connection.commit();
             System.out.println("Finished putting data into database!");
         } catch (SQLException e) {
@@ -250,40 +264,4 @@ public class RestServerStarter {
         return parts;
     }
 
-    private class GenericThreader implements Runnable{
-        List<?> innerCollection;
-
-        public GenericThreader(List<?> list, final int i){
-            innerCollection = list;
-            System.out.println("GenericThread " + i);
-        }
-
-        @Override
-        public void run(){
-            final int STUDIENGANG = 0;
-            final int VERANSTALTUNG = 1;
-            int type = -1;
-            for (Object o :
-                    innerCollection) {
-                if(o instanceof Studiengang){
-                    type = STUDIENGANG;
-                }
-                else if (o instanceof Veranstaltung){
-                    type = VERANSTALTUNG;
-                }
-                break;
-            }
-            for (Object o :
-                    innerCollection) {
-                if(type == STUDIENGANG){
-                    Studiengang s = (Studiengang) o;
-                    veranstaltungList.addAll(hs.getLectures(s.getId()));
-                }
-                if(type == VERANSTALTUNG){
-                    Veranstaltung va = (Veranstaltung) o;
-                    terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
-                }
-            }
-        }
-    }
 }
