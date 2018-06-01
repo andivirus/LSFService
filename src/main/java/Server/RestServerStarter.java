@@ -4,6 +4,7 @@ import Server.Institute.Institute;
 import Server.Institute.Studiengang;
 import Server.Institute.Termin;
 import Server.Institute.Veranstaltung;
+import Server.Util.Database.DBHandler;
 import Server.Util.Threading.ThreadCreator;
 import com.sun.net.httpserver.HttpServer;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
@@ -37,37 +38,10 @@ public class RestServerStarter {
         try {
             long begin = System.currentTimeMillis();
 
-            try {
-                Connection connection = DriverManager.getConnection(DB_URL);
-                Statement statement = connection.createStatement();
-                ResultSet rowcountset = statement.executeQuery("SELECT COUNT(*) as rowcount FROM Settings");
-                rowcountset.next();
-                int rowcount = rowcountset.getInt("rowcount");
-                statement.close();
-                if (rowcount != 0) {
-                    Statement lastupdate = connection.createStatement();
-                    ResultSet resultSet = lastupdate.executeQuery("SELECT LastUpdate FROM Settings");
-                    while (resultSet.next()) {
-                        System.out.println("LastUpdate: " + resultSet.getTimestamp(1).toString());
-                        System.out.println("Current Time:  " + new java.util.Date().toString());
-                        if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000)) {
-                            System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
-                            System.out.println("Skipping Database input");
-                            lastupdate.close();
-                        } else {
-                            System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
-                            lastupdate.close();
-                            initDatabase();
-                        }
-                    }
-                }
-                else {
-                    initDatabase();
-                }
-                }catch(SQLException e){
-                    e.printStackTrace();
-                    System.out.println("SQLException: SKIPPED");
-                }
+            DBHandler dbHandler = DBHandler.getInstance();
+            if (dbHandler.isUpdateNecessary()){
+                initDatabase();
+            }
 
             long end = System.currentTimeMillis();
 
@@ -241,27 +215,4 @@ public class RestServerStarter {
             e.printStackTrace();
         }
     }
-
-    private <T> List<List<T>> split(List<T> list, final int number){
-        List<List<T>> parts = new ArrayList<>();
-        /*
-        final int size = list.size();
-        final int length = list.size()/number;
-        for (int i = 0; i < size; i += length) {
-            parts.add(new ArrayList<>(list.subList(i, Math.min(size, i + length))));
-            System.out.println("LENGTH: " + length);
-        }
-        */
-        int size = (int) Math.ceil(list.size() / number);
-        System.out.println(size);
-        for (int start = 0; start < list.size(); start += size) {
-            int end = Math.min(start + size, list.size());
-            List<T> sublist = list.subList(start, end);
-            parts.add(new ArrayList<>(sublist));
-        }
-
-        System.out.println(parts.size());
-        return parts;
-    }
-
 }
