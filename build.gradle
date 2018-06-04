@@ -23,3 +23,13 @@ dependencies {
     implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.0'
     implementation 'javax.servlet:javax.servlet-api:3.0.1'
 }
+
+jar{
+    manifest{
+        attributes 'Main-Class': 'Server.RestServerStarter'
+    }
+
+    from {
+        configurations.compile.collect{ it.isDirectory() ? it : zipTree(it)}
+    }
+}
