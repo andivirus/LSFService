@@ -1,9 +1,9 @@
 package Server.Util.Database;
 
-import Server.Institute.Institute;
-import Server.Institute.Studiengang;
-import Server.Institute.Termin;
-import Server.Institute.Veranstaltung;
+import lsfserver.api.Institute.Institute;
+import lsfserver.api.Institute.Veranstaltung;
+import lsfserver.api.Institute.Studiengang;
+import lsfserver.api.Institute.Termin;
 
 import java.io.File;
 import java.sql.*;
@@ -114,7 +114,7 @@ public class DBHandler {
     }
 
     public void putIntoDatabase(List<Institute> instituteList, List<Studiengang> studiengangList,
-                                 List<Veranstaltung> veranstaltungList, List<Termin> terminList){
+                                List<Veranstaltung> veranstaltungList, List<Termin> terminList){
         try {
             Connection connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(false);

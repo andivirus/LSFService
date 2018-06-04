@@ -1,13 +1,15 @@
 package Server;
 
-import Server.Institute.Institute;
-import Server.Institute.Studiengang;
-import Server.Institute.Termin;
-import Server.Institute.Veranstaltung;
+import lsfserver.api.Institute.Institute;
+import lsfserver.api.Institute.Studiengang;
+import lsfserver.api.Institute.Termin;
+import lsfserver.api.Institute.Veranstaltung;
+import lsfserver.api.Pluggable;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.Response;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -17,7 +19,7 @@ import java.util.List;
 @Path( "/" )
 @Singleton
 public class LSFResource implements LSFContract{
-    private HSWorms hs;
+    private Pluggable hs;
     private LinkedList<Institute> instituteList;
     private LinkedList<Studiengang> studiengangList;
     private LinkedList<Veranstaltung> veranstaltungList;

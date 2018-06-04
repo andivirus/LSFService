@@ -1,9 +1,11 @@
-package Server;
+package lsfserver.hsworms;
 
-import Server.Institute.Institute;
-import Server.Institute.Studiengang;
-import Server.Institute.Termin;
-import Server.Institute.Veranstaltung;
+import lsfserver.api.Institute.Institute;
+import lsfserver.api.Institute.Studiengang;
+import lsfserver.api.Institute.Veranstaltung;
+import lsfserver.api.Institute.Termin;
+import lsfserver.api.Pluggable;
+import lsfserver.api.PluginManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,13 +22,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HSWorms {
+public class HSWorms implements Pluggable {
     private String hsurl = "https://lsf.hs-worms.de/qisserver/rds?state=user" +
             "&type=8&topitem=lectures&breadCrumbSource=portal";
 
     private String instituteid;
 
     private Document connection;
+
+    private PluginManager pluginManager;
 
     public HSWorms() throws IOException {
         connection = Jsoup.connect(hsurl).get();
@@ -38,11 +42,29 @@ public class HSWorms {
         }
     }
 
+    @Override
+    public boolean start() {
+        System.out.println("Starting HSWorms plugin");
+        return true;
+    }
+
+    @Override
+    public boolean stop() {
+        System.out.println("Stopping HSWorms plugin");
+        return true;
+    }
+
+    @Override
+    public void setPluginManger(PluginManager pluginManager) {
+        this.pluginManager = pluginManager;
+    }
+
     /**
      * Creates the Institute object
      * @return  An Institute object
      */
-    public Institute getInstitue(){
+    @Override
+    public Institute getInstitute(){
         String title = connection.title().trim();
         return new Institute(instituteid, title);
     }
@@ -51,6 +73,7 @@ public class HSWorms {
      * @return Eine Liste aller Studiengänge des Instituts
      * @throws IOException
      */
+    @Override
     public List<Studiengang> getCurriculli() throws IOException{
 
         Element element = connection.body();
@@ -99,6 +122,7 @@ public class HSWorms {
      * @param stdgid
      * @return Eine Liste aller Veranstaltungen innerhalb des gegebenen Studiengangs
      */
+    @Override
     public List<Veranstaltung> getLectures(int stdgid){
         //TODO: Dynamischer machen, das Programm selbst auf den Link für Studiengangliste klicken lassen
         String url = "https://lsf.hs-worms.de/qisserver/rds?state=wplan&missing=allTerms&k_parallel.parallelid=" +
@@ -145,6 +169,7 @@ public class HSWorms {
      * @param vanummer
      * @return Liefert alle Termine einer Veranstaltung
      */
+    @Override
     public List<Termin> getLectureTimes(String vaname, int vanummer){
         String url = "https://lsf.hs-worms.de/qisserver/rds?state=verpublish&status=init" +
                 "&vmfile=no&publishid=" + vanummer + "&moduleCall=webInfo" +

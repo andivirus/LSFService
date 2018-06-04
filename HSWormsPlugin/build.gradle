@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group 'com.ivashutin'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jsoup:jsoup:1.11.3'
+    compile fileTree(dir: '../api/build/libs', include: '*.jar')
+}
+
+jar {
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
