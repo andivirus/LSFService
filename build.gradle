@@ -1,10 +1,12 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 group 'com.ivashutin'
 version '1.0-SNAPSHOT'
 
+mainClassName = 'Server.RestServerStarter'
 sourceCompatibility = 1.8
 
 repositories {
@@ -41,3 +43,11 @@ jar{
     }
 }
 
+task copyPlugin {
+    doLast {
+        copy {
+            from project(':HSWormsPlugin').file('build/libs/HSWormsPlugin-1.0-SNAPSHOT.jar')
+            into file('./plugins')
+        }
+    }
+}

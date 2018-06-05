@@ -1,9 +1,7 @@
 package Server;
 
-import Server.Institute.Institute;
-import Server.Institute.Studiengang;
-import Server.Institute.Termin;
-import Server.Institute.Veranstaltung;
+/*
+import lsfserver.api.Institute.Institute;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,3 +67,4 @@ public class HSWormsTest {
         System.out.println("kek");
     }
 }
+*/

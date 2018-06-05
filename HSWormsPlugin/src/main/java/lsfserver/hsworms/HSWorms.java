@@ -74,7 +74,7 @@ public class HSWorms implements Pluggable {
      * @throws IOException
      */
     @Override
-    public List<Studiengang> getCurriculli() throws IOException{
+    public List<Studiengang> getCurriculli(){
 
         Element element = connection.body();
         Elements link = element.getElementsContainingOwnText("Studiengangpläne (Liste)");
@@ -114,7 +114,7 @@ public class HSWorms implements Pluggable {
                 }
             }
         }
-        throw new IOException("Seite mit Studiengangplänen nicht gefunden");
+        return null;
     }
 
     /**

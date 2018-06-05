@@ -1,6 +1,5 @@
 package Server.Util.Threading;
 
-import Server.Institute.Studiengang;
 
 import java.util.*;
 

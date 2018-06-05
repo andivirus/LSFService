@@ -1,8 +1,8 @@
 package Server.Util.Threading;
 
-import Server.Institute.Studiengang;
-import Server.Institute.Veranstaltung;
 import Server.RestServerStarter;
+import lsfserver.api.Institute.Studiengang;
+import lsfserver.api.Institute.Veranstaltung;
 
 import java.util.List;
 

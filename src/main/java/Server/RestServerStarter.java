@@ -66,9 +66,8 @@ public class RestServerStarter {
 
     private void initDatabase() throws IOException {
         System.out.println("Scraping Data for Database");
-        List<Pluggable> plugins = null;
+        List<Pluggable> plugins;
         plugins = PluginLoader.loadPlugins(new File("./plugins"));
-        //hs = new HSWorms();
         instituteList = new LinkedList<>();
         studiengangList = new LinkedList<>();
         veranstaltungList = new LinkedList<>();
@@ -76,6 +75,7 @@ public class RestServerStarter {
 
         for (Pluggable hs :
                 plugins) {
+            this.hs = hs;
             hs.start();
             instituteList.add(hs.getInstitute());
             studiengangList.addAll(hs.getCurriculli());
