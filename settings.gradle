@@ -1,4 +1,5 @@
 rootProject.name = 'lsfserver'
 include 'api'
 include 'HSWormsPlugin'
+include 'TUDortmundPlugin'
 
