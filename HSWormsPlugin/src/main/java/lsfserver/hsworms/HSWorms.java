@@ -5,7 +5,6 @@ import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Veranstaltung;
 import lsfserver.api.Institute.Termin;
 import lsfserver.api.Pluggable;
-import lsfserver.api.PluginManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,8 +29,6 @@ public class HSWorms implements Pluggable {
 
     private Document connection;
 
-    private PluginManager pluginManager;
-
     public HSWorms() throws IOException {
         connection = Jsoup.connect(hsurl).get();
 
@@ -52,11 +49,6 @@ public class HSWorms implements Pluggable {
     public boolean stop() {
         System.out.println("Stopping HSWorms plugin");
         return true;
-    }
-
-    @Override
-    public void setPluginManger(PluginManager pluginManager) {
-        this.pluginManager = pluginManager;
     }
 
     /**

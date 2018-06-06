@@ -11,7 +11,6 @@ import java.util.List;
 public interface Pluggable {
     boolean start();
     boolean stop();
-    void setPluginManger(PluginManager pluginManager);
 
     Institute getInstitute();
     List<Studiengang> getCurriculli() throws IOException;
