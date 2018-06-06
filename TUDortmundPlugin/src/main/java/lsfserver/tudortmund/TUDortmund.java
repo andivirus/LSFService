@@ -164,13 +164,12 @@ public class TUDortmund implements Pluggable {
      */
     @Override
     public List<Termin> getLectureTimes(String vaname, int vanummer){
-        String url = "https://lsf.tu-dortmund.de/qisserver/rds?state=verpublish&status=init" +
+        String url = "https://www.lsf.tu-dortmund.de/qisserver/rds?state=verpublish&status=init" +
                 "&vmfile=no&publishid=" + vanummer + "&moduleCall=webInfo" +
                 "&publishConfFile=webInfo&publishSubDir=veranstaltung";
 
 
         for(int count = 0; count < 5; count++) {
-            System.out.println("Trying for the " + count + " time");
             try {
                 Element body = Jsoup.connect(url).get().body();
                 Elements tables = body.select("form > table[summary*=Veranstaltungstermine]");
@@ -209,9 +208,19 @@ public class TUDortmund implements Pluggable {
                                         terminHelper.setEnd_datum(formatted);
                                     }
                                     if (spalte.text().contains("bis")) {
-                                        String formatted = spalte.text().replace("bis", "").replace(".", "").trim();
-                                        terminHelper.setStart_datum(formatted.substring(0, 7));
-                                        terminHelper.setEnd_datum(formatted.substring(10));
+                                        String[] zeiten = spalte.text().split("bis");
+                                        if(zeiten[0].length() == 11){
+                                            terminHelper.setStart_datum(zeiten[0].replace(".", "").trim());
+                                        }
+                                        else {
+                                            System.out.println("StartDatum in wrong format");
+                                        }
+                                        if(zeiten[1].length() == 11){
+                                            terminHelper.setEnd_datum(zeiten[1].replace(".", "").trim());
+                                        }
+                                        else {
+                                            System.out.println("EndDatum in wrong format");
+                                        }
                                     }
                                     break;
                                 case (5):
@@ -234,6 +243,7 @@ public class TUDortmund implements Pluggable {
                 }
                 return termine;
             } catch (IOException e) {
+                System.out.println("Trying for the " + count + " time");
                 if(count == 4) {
                     e.printStackTrace();
                 }

@@ -1,6 +1,7 @@
 package Server;
 
 import Server.Util.Database.DBHandler;
+import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
 import Server.Util.Threading.ThreadCreator;
 import com.sun.net.httpserver.HttpServer;
@@ -73,10 +74,22 @@ public class RestServerStarter {
         veranstaltungList = new LinkedList<>();
         terminList = new LinkedList<>();
 
+        System.out.println("Found Plugins:");
+        for (String s :
+                new File("./plugins").list(new JarFilenameFilter())) {
+            System.out.println(s);
+        }
         for (Pluggable hs :
                 plugins) {
-            this.hs = hs;
+            RestServerStarter.hs = hs;
             hs.start();
+            /*
+            List<Institute> tempInstituteList = new LinkedList<>();
+            tempInstituteList.add(hs.getInstitute());
+
+            List<Studiengang> tempStudiengangList = new LinkedList<>();
+            tempStudiengangList.addAll(hs.getCurriculli());
+            */
             instituteList.add(hs.getInstitute());
             studiengangList.addAll(hs.getCurriculli());
 
