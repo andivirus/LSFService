@@ -1,5 +1,6 @@
 package Server;
 
+import Server.Util.Database.DBHandler;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
@@ -36,7 +37,7 @@ public class LSFResource implements LSFContract{
         terminList = (LinkedList<Termin>) RestServerStarter.terminList;
 
         try {
-            connection = DriverManager.getConnection(RestServerStarter.DB_URL);
+            connection = DriverManager.getConnection(DBHandler.DB_URL);
         } catch (SQLException e) {
             e.printStackTrace();
         }

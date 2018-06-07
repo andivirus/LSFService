@@ -1,5 +1,6 @@
 package Server;
 
+import Server.Util.Config.ConfigReader;
 import Server.Util.Database.DBHandler;
 import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
@@ -28,20 +29,20 @@ public class RestServerStarter {
     public static List<Veranstaltung> veranstaltungList;
     public static List<Termin> terminList;
 
-    public static final String DB_URL = "jdbc:sqlite:./database/lsf.db";
 
     public static void main(String[] args) {
         new RestServerStarter();
     }
 
     public RestServerStarter(){
-        DBHandler dbHandler = DBHandler.getInstance();
+        ConfigReader configReader = new ConfigReader();
+        DBHandler dbHandler = DBHandler.getInstance(configReader.getProperty(ConfigReader.DATABASE_PATH));
         dbHandler.createDatabase();
         try {
             long begin = System.currentTimeMillis();
 
             if (dbHandler.isUpdateNecessary()){
-                dbHandler.clearAppointmentsFromDatabase();
+                dbHandler.clearDatabase();
                 initDatabase(dbHandler);
             }
 
@@ -52,8 +53,10 @@ public class RestServerStarter {
 
             try {
                 System.out.println("Starting Server");
-                URI uri = new URI("http://localhost:8090/");
+                String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
+                URI uri = new URI(uristring);
                 HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
+                System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
                 System.out.println("Server started at Port " + httpServer.getAddress().getPort());
 
             } catch (URISyntaxException e) {

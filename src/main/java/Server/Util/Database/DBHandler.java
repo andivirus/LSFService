@@ -13,15 +13,17 @@ import java.util.Set;
 
 public class DBHandler {
 
-    public static final String DB_URL = "jdbc:sqlite:./database/lsf.db";
+    public static String DB_URL;
 
     private static DBHandler singleton;
 
-    private DBHandler() {}
+    private DBHandler(String url) {
+        DB_URL = "jdbc:sqlite:" + url;
+    }
 
-    public static synchronized DBHandler getInstance(){
+    public static synchronized DBHandler getInstance(String url){
         if(singleton == null){
-            singleton = new DBHandler();
+            singleton = new DBHandler(url);
         }
         return singleton;
     }
@@ -42,13 +44,13 @@ public class DBHandler {
                 while (resultSet.next()) {
                     System.out.println("LastUpdate: " + resultSet.getTimestamp(1).toString());
                     System.out.println("Current Time:  " + new java.util.Date().toString());
-                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000)) {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
+                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000)) {
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000));
                         System.out.println("Skipping Database input");
                         lastupdate.close();
                         return false;
                     } else {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000));
                         lastupdate.close();
                         return true;
                     }
@@ -202,11 +204,14 @@ public class DBHandler {
         }
     }
 
-    public void clearAppointmentsFromDatabase(){
+    public void clearDatabase(){
         try{
             Connection connection = DriverManager.getConnection(DB_URL);
             Statement statement = connection.createStatement();
             statement.executeUpdate("DELETE FROM Termin");
+            statement.executeUpdate("DELETE FROM Veranstaltung");
+            statement.executeUpdate("DELETE FROM Studiengaenge");
+            statement.executeUpdate("DELETE FROM Institutes");
         } catch (SQLException e) {
             e.printStackTrace();
         }
