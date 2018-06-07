@@ -41,9 +41,8 @@ public class RestServerStarter {
             long begin = System.currentTimeMillis();
 
             if (dbHandler.isUpdateNecessary()){
-                initDatabase();
-                dbHandler.putIntoDatabase(instituteList, studiengangList,
-                        veranstaltungList, terminList);
+                dbHandler.clearAppointmentsFromDatabase();
+                initDatabase(dbHandler);
             }
 
             long end = System.currentTimeMillis();
@@ -65,7 +64,7 @@ public class RestServerStarter {
         }
     }
 
-    private void initDatabase() throws IOException {
+    private void initDatabase(DBHandler dbHandler) throws IOException {
         System.out.println("Scraping Data for Database");
         List<Pluggable> plugins;
         plugins = PluginLoader.loadPlugins(new File("./plugins"));
@@ -83,19 +82,19 @@ public class RestServerStarter {
                 plugins) {
             RestServerStarter.hs = hs;
             hs.start();
-            /*
-            List<Institute> tempInstituteList = new LinkedList<>();
-            tempInstituteList.add(hs.getInstitute());
-
-            List<Studiengang> tempStudiengangList = new LinkedList<>();
-            tempStudiengangList.addAll(hs.getCurriculli());
-            */
             instituteList.add(hs.getInstitute());
             studiengangList.addAll(hs.getCurriculli());
 
             ThreadCreator threadCreator = ThreadCreator.instantiate();
             threadCreator.doJob(studiengangList);
             threadCreator.doJob(veranstaltungList);
+
+            dbHandler.putIntoDatabase(instituteList, studiengangList,
+                    veranstaltungList, terminList);
+            instituteList.clear();
+            studiengangList.clear();
+            veranstaltungList.clear();
+            terminList.clear();
         }
     }
 }

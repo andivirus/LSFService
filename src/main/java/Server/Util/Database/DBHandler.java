@@ -46,6 +46,7 @@ public class DBHandler {
                         System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
                         System.out.println("Skipping Database input");
                         lastupdate.close();
+                        return false;
                     } else {
                         System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (10 * 60 * 1000));
                         lastupdate.close();
@@ -59,7 +60,7 @@ public class DBHandler {
             e.printStackTrace();
             System.out.println("SQLException: SKIPPED");
         }
-        return true;
+        return false;
     }
 
     public void createDatabase(){
@@ -196,6 +197,16 @@ public class DBHandler {
             statement.close();
             connection.commit();
             System.out.println("Finished putting data into database!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void clearAppointmentsFromDatabase(){
+        try{
+            Connection connection = DriverManager.getConnection(DB_URL);
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("DELETE FROM Termin");
         } catch (SQLException e) {
             e.printStackTrace();
         }
