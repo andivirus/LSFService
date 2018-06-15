@@ -11,6 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("Duplicates")
 public class HSWorms implements Pluggable {
     private String hsurl = "https://lsf.hs-worms.de/qisserver/rds?state=user" +
             "&type=8&topitem=lectures&breadCrumbSource=portal";
@@ -30,7 +32,12 @@ public class HSWorms implements Pluggable {
     private Document connection;
 
     public HSWorms() throws IOException {
-        connection = Jsoup.connect(hsurl).get();
+        try {
+            connection = Jsoup.connect(hsurl).get();
+        }
+        catch (UnknownHostException e){
+            System.err.println("Host not found. Check your internet connection.");
+        }
 
         Pattern pattern = Pattern.compile("\\.(.*?)/");
         Matcher matcher = pattern.matcher(hsurl);
@@ -169,7 +176,6 @@ public class HSWorms implements Pluggable {
 
 
         for(int count = 0; count < 5; count++) {
-            System.out.println("Trying for the " + count + " time");
             try {
                 Element body = Jsoup.connect(url).get().body();
                 Elements tables = body.select("form > table[summary*=Veranstaltungstermine]");
@@ -208,9 +214,28 @@ public class HSWorms implements Pluggable {
                                         terminHelper.setEnd_datum(formatted);
                                     }
                                     if (spalte.text().contains("bis")) {
-                                        String formatted = spalte.text().replace("bis", "").replace(".", "").trim();
-                                        terminHelper.setStart_datum(formatted.substring(0, 7));
-                                        terminHelper.setEnd_datum(formatted.substring(10));
+                                        String[] zeiten = spalte.text().split("bis");
+                                        if(zeiten[0].length() >= 11){
+                                            terminHelper.setStart_datum(zeiten[0].replaceAll("[^0-9]", ""));
+                                        }
+                                        else {
+                                            System.out.println("StartDatum in wrong format");
+                                        }
+                                        if(zeiten[1].length() >= 11){
+                                            //terminHelper.setEnd_datum(zeiten[1].replace(".", "").trim());
+                                            terminHelper.setEnd_datum(zeiten[1].replaceAll("[^0-9]", ""));
+                                        }
+                                        else {
+                                            System.out.println("EndDatum in wrong format");
+                                            System.err.println(vaname);
+                                            System.err.println(art);
+                                            System.err.println(rowid);
+                                            System.err.println(vanummer);
+                                            for (String s :
+                                                    zeiten) {
+                                                System.out.println(s);
+                                            }
+                                        }
                                     }
                                     break;
                                 case (5):
@@ -233,6 +258,7 @@ public class HSWorms implements Pluggable {
                 }
                 return termine;
             } catch (IOException e) {
+                System.out.println("Retrying for the " + count + " time");
                 if(count == 4) {
                     e.printStackTrace();
                 }
@@ -321,6 +347,9 @@ public class HSWorms implements Pluggable {
             try {
                 this.end_datum = dateFormat.parse(end_datum);
             } catch (ParseException e) {
+                System.err.println(fach);
+                System.err.println(prof);
+                System.err.println(raum);
                 e.printStackTrace();
             }
         }

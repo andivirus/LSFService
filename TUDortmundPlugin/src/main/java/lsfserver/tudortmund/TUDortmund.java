@@ -209,14 +209,14 @@ public class TUDortmund implements Pluggable {
                                     }
                                     if (spalte.text().contains("bis")) {
                                         String[] zeiten = spalte.text().split("bis");
-                                        if(zeiten[0].length() == 11){
-                                            terminHelper.setStart_datum(zeiten[0].replace(".", "").trim());
+                                        if(zeiten[0].length() >= 11){
+                                            terminHelper.setStart_datum(zeiten[0].replaceAll("[^0-9]", ""));
                                         }
                                         else {
                                             System.out.println("StartDatum in wrong format");
                                         }
-                                        if(zeiten[1].length() == 11){
-                                            terminHelper.setEnd_datum(zeiten[1].replace(".", "").trim());
+                                        if(zeiten[1].length() >= 11){
+                                            terminHelper.setEnd_datum(zeiten[1].replaceAll("[^0-9]", ""));
                                         }
                                         else {
                                             System.out.println("EndDatum in wrong format");
