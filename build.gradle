@@ -43,11 +43,20 @@ jar{
     }
 }
 
-task copyPlugin {
+task copyAllPlugin {
     doLast {
         copy {
             from project(':HSWormsPlugin').file('build/libs/HSWormsPlugin-1.0-SNAPSHOT.jar')
             from project(':TUDortmundPlugin').file('build/libs/TUDortmundPlugin-1.0-SNAPSHOT.jar')
+            into file('./plugins')
+        }
+    }
+}
+
+task copyHSPlugin {
+    doLast {
+        copy {
+            from project(':HSWormsPlugin').file('build/libs/HSWormsPlugin-1.0-SNAPSHOT.jar')
             into file('./plugins')
         }
     }
