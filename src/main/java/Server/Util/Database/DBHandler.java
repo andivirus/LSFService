@@ -7,6 +7,7 @@ import lsfserver.api.Institute.Termin;
 
 import java.io.File;
 import java.sql.*;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -96,14 +97,16 @@ public class DBHandler {
                     "FOREIGN KEY (instituteid) REFERENCES Institutes(id))");
 
             statement.addBatch("CREATE TABLE IF NOT EXISTS Termin (" +
-                    "terminid INTEGER, rowid INTEGER, fach VARCHAR, tag INTEGER, " +
+                    "terminid INTEGER, rowid INTEGER, fach VARCHAR, fachid INTEGER, tag INTEGER, " +
                     "start_zeit TIMESTAMP, end_zeit TIMESTAMP," +
                     "start_datum DATE, end_datum DATE," +
                     "raum VARCHAR, prof VARCHAR, bemerkung VARCHAR, art VARCHAR, ausfall VARCHAR, " +
-                    "FOREIGN KEY (fach) REFERENCES Veranstaltung(Name))");
+                    "PRIMARY KEY (terminid, rowid, fach, fachid), " +
+                    "FOREIGN KEY (fach) REFERENCES Veranstaltung(Name), " +
+                    "FOREIGN KEY (fachid) references Veranstaltung(id))");
 
             statement.addBatch("CREATE VIEW IF NOT EXISTS VLTERMIN AS " +
-                    "SELECT * FROM Veranstaltung JOIN Termin ON Veranstaltung.Name = Termin.fach");
+                    "SELECT * FROM Veranstaltung JOIN Termin ON Veranstaltung.Name = Termin.fach and Veranstaltung.id = Termin.fachid");
 
 
             statement.executeBatch();
@@ -116,8 +119,8 @@ public class DBHandler {
         }
     }
 
-    public void putIntoDatabase(List<Institute> instituteList, List<Studiengang> studiengangList,
-                                List<Veranstaltung> veranstaltungList, List<Termin> terminList){
+    public void putIntoDatabase(Collection<Institute> instituteList, Collection<Studiengang> studiengangList,
+                                Collection<Veranstaltung> veranstaltungList, Collection<Termin> terminList){
         try {
             Connection connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(false);
@@ -170,24 +173,25 @@ public class DBHandler {
             connection.commit();
 
             System.out.println(terminList.size());
-            statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             for (Termin t :
                     terminList) {
                 statement.setInt(1, t.getId());
                 statement.setInt(2, t.getRowid());
                 statement.setString(3, t.getFach());
-                statement.setInt(4, t.getTag());
-                statement.setTime(5, new Time(t.getStart_zeit().getTime().getTime()));
-                statement.setTime(6, new Time(t.getEnd_zeit().getTime().getTime()));
+                statement.setInt(4, t.getFachid());
+                statement.setInt(5, t.getTag());
+                statement.setTime(6, new Time(t.getStart_zeit().getTime().getTime()));
+                statement.setTime(7, new Time(t.getEnd_zeit().getTime().getTime()));
                 if(t.getStart_datum() != null)
-                    statement.setDate(7, new Date(t.getStart_datum().getTime()));
+                    statement.setDate(8, new Date(t.getStart_datum().getTime()));
                 if(t.getEnd_datum() != null)
-                    statement.setDate(8, new Date(t.getEnd_datum().getTime()));
-                statement.setString(9, t.getRaum());
-                statement.setString(10, t.getProf());
-                statement.setString(11, t.getBemerkung());
-                statement.setString(12, t.getArt());
-                statement.setString(13, t.getAusfall());
+                    statement.setDate(9, new Date(t.getEnd_datum().getTime()));
+                statement.setString(10, t.getRaum());
+                statement.setString(11, t.getProf());
+                statement.setString(12, t.getBemerkung());
+                statement.setString(13, t.getArt());
+                statement.setString(14, t.getAusfall());
                 statement.addBatch();
             }
             statement.executeBatch();

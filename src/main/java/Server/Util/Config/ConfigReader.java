@@ -46,7 +46,6 @@ public class ConfigReader {
             System.err.println("Couldn't write props.cfg file");
             e.printStackTrace();
         }
-
     }
 
     public String getProperty(String key){

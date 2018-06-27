@@ -4,27 +4,31 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Objects;
 
 @XmlRootElement ( name = "Termin" )
 public class Termin {
     private int id;
     private int rowid; //Reihe innerhalb einer Gruppe
-    private String fach;
+    private String fach = "";
+    private int fachid;
     private int tag;
     private Calendar start_zeit;
     private Calendar end_zeit;
     private Date start_datum;
     private Date end_datum;
-    private String raum;
-    private String prof;
-    private String bemerkung;
-    private String art;
-    private String ausfall;
+    private String raum = "";
+    private String prof = "";
+    private String bemerkung = "";
+    private String art = "";
+    private String ausfall = "";
 
-    public Termin(int id, int rowid, String fach, int tag, Calendar start_zeit, Calendar end_zeit, Date start_datum, Date end_datum, String raum, String prof, String bemerkung, String art, String ausfall) {
+    public Termin(int id, int rowid, String fach, int fachid, int tag, Calendar start_zeit, Calendar end_zeit, Date start_datum, Date end_datum, String raum, String prof, String bemerkung, String art, String ausfall) {
         this.id = id;
         this.rowid = rowid;
         this.fach = fach;
+        this.fachid = fachid;
         this.tag = tag;
         this.start_zeit = start_zeit;
         this.end_zeit = end_zeit;
@@ -46,6 +50,7 @@ public class Termin {
                 "id=" + id +
                 ", rowid=" + rowid +
                 ", fach='" + fach + '\'' +
+                ", fachid=" + fachid +
                 ", tag=" + tag +
                 ", start_zeit=" + start_zeit +
                 ", end_zeit=" + end_zeit +
@@ -72,6 +77,11 @@ public class Termin {
     @XmlElement
     public String getFach() {
         return fach;
+    }
+
+    @XmlElement
+    public int getFachid(){
+        return fachid;
     }
 
     @XmlElement
@@ -123,4 +133,22 @@ public class Termin {
     public String getAusfall() {
         return ausfall;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        Termin o = (Termin) obj;
+        if(rowid == o.rowid &&
+                id == o.id &&
+                fachid == o.fachid){
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(rowid, id, fachid);
+    }
 }
+
+//TODO: make equals, change inital list to hashset

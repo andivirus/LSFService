@@ -15,10 +15,7 @@ import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -133,7 +130,7 @@ public class HSWorms implements Pluggable {
                 Document lecturespage = Jsoup.connect(url).get();
 
                 Elements reihen = lecturespage.body().select("table[summary*=Veranstaltungen] > tbody > tr");
-                List<Veranstaltung> veranstaltungList = new LinkedList<>();
+                Set<Veranstaltung> veranstaltungList = new HashSet<>();
                 reihen.remove(0);
 
                 for (Element reihe :
@@ -152,7 +149,9 @@ public class HSWorms implements Pluggable {
                         veranstaltungList.add(new Veranstaltung(id, instituteid, stdgid, name));
                     }
                 }
-                return veranstaltungList;
+                List<Veranstaltung> veranstaltungsList = new LinkedList<>();
+                veranstaltungsList.addAll(veranstaltungList);
+                return veranstaltungsList;
             } catch (IOException e) {
                 if(count == 4) {
                     e.printStackTrace();
@@ -180,7 +179,7 @@ public class HSWorms implements Pluggable {
                 Element body = Jsoup.connect(url).get().body();
                 Elements tables = body.select("form > table[summary*=Veranstaltungstermine]");
 
-                List<Termin> termine = new LinkedList<>();
+                Set<Termin> termine = new HashSet<>();
 
                 int termingruppe = 0;
                 for (Element gruppe :
@@ -196,6 +195,7 @@ public class HSWorms implements Pluggable {
                         TerminHelper terminHelper = new TerminHelper();
                         terminHelper.art = art;
                         terminHelper.fach = vaname;
+                        terminHelper.fachid = vanummer;
                         terminHelper.rowid = rowid;
                         for (Element spalte :
                                 zeile.children()) {
@@ -222,7 +222,6 @@ public class HSWorms implements Pluggable {
                                             System.out.println("StartDatum in wrong format");
                                         }
                                         if(zeiten[1].length() >= 11){
-                                            //terminHelper.setEnd_datum(zeiten[1].replace(".", "").trim());
                                             terminHelper.setEnd_datum(zeiten[1].replaceAll("[^0-9]", ""));
                                         }
                                         else {
@@ -256,7 +255,9 @@ public class HSWorms implements Pluggable {
                         termine.add(terminHelper.createTermin());
                     }
                 }
-                return termine;
+                List<Termin> terminList = new LinkedList<>();
+                terminList.addAll(termine);
+                return terminList;
             } catch (IOException e) {
                 System.out.println("Retrying for the " + count + " time");
                 if(count == 4) {
@@ -271,6 +272,7 @@ public class HSWorms implements Pluggable {
         public int id;
         public int rowid;
         public String fach;
+        public int fachid;
         public int tag;
         public Calendar start_zeit;
         public Calendar end_zeit;
@@ -355,7 +357,7 @@ public class HSWorms implements Pluggable {
         }
 
         public Termin createTermin(){
-            return new Termin(id, rowid, fach, tag, start_zeit, end_zeit,
+            return new Termin(id, rowid, fach, fachid, tag, start_zeit, end_zeit,
                     start_datum, end_datum, raum, prof,
                     bemerkung, art, ausfall);
         }

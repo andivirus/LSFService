@@ -43,14 +43,6 @@ public class ThreadCreator {
 
     private <T> List<List<T>> split(List<T> list, final int number){
         List<List<T>> parts = new ArrayList<>();
-        /*
-        final int size = list.size();
-        final int length = list.size()/number;
-        for (int i = 0; i < size; i += length) {
-            parts.add(new ArrayList<>(list.subList(i, Math.min(size, i + length))));
-            System.out.println("LENGTH: " + length);
-        }
-        */
         int size = (int) Math.ceil(list.size() / number);
         System.out.println(size);
         for (int start = 0; start < list.size(); start += size) {
@@ -59,7 +51,7 @@ public class ThreadCreator {
             parts.add(new ArrayList<>(sublist));
         }
 
-        System.out.println(parts.size());
+        System.out.println("Size of parts list: " + parts.size());
         return parts;
     }
 }

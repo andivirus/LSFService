@@ -190,6 +190,7 @@ public class TUDortmund implements Pluggable {
                         TerminHelper terminHelper = new TerminHelper();
                         terminHelper.art = art;
                         terminHelper.fach = vaname;
+                        terminHelper.fachid = vanummer;
                         terminHelper.rowid = rowid;
                         for (Element spalte :
                                 zeile.children()) {
@@ -256,6 +257,7 @@ public class TUDortmund implements Pluggable {
         public int id;
         public int rowid;
         public String fach;
+        public int fachid;
         public int tag;
         public Calendar start_zeit;
         public Calendar end_zeit;
@@ -337,7 +339,7 @@ public class TUDortmund implements Pluggable {
         }
 
         public Termin createTermin(){
-            return new Termin(id, rowid, fach, tag, start_zeit, end_zeit,
+            return new Termin(id, rowid, fach, fachid, tag, start_zeit, end_zeit,
                     start_datum, end_datum, raum, prof,
                     bemerkung, art, ausfall);
         }

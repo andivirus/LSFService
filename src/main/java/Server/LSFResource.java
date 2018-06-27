@@ -12,10 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.sql.*;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Path( "/" )
 @Singleton
@@ -45,6 +42,7 @@ public class LSFResource implements LSFContract{
     }
     @Override
     public Response getListOfInstitutes() {
+        System.out.println("Incoming Query: List of Institutes");
         List<Institute> responseList = new LinkedList<>();
         try {
             Statement statement = connection.createStatement();
@@ -62,6 +60,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfStudiengaenge(String hsid) {
+        System.out.println("Incoming Query: List of Majors: " + hsid);
         List<Studiengang> responseList = new LinkedList<>();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Studiengaenge WHERE instituteid = ?");
@@ -81,6 +80,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfCourses(String hsid, int stid) {
+        System.out.println("Incoming Query: List of Courses [Institute - MajorID] " + hsid + " - " + stid);
         List<Veranstaltung> responseList = new LinkedList<>();
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Veranstaltung " +
@@ -104,7 +104,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfLectures(String hsid, int vstid) {
-        List<Termin> responseList = new LinkedList<>();
+        Set<Termin> responseList = new HashSet<>();
 
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM VLTERMIN " +
@@ -114,12 +114,12 @@ public class LSFResource implements LSFContract{
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
                 responseList.add(new Termin(resultSet.getInt("terminid"), resultSet.getInt("rowid"),resultSet.getString("fach"),
-                        resultSet.getInt("tag"), LectureReconstructor.createCalendar(resultSet.getTimestamp("start_zeit")),
+                        resultSet.getInt("fachid"), resultSet.getInt("tag"), LectureReconstructor.createCalendar(resultSet.getTimestamp("start_zeit")),
                         LectureReconstructor.createCalendar(resultSet.getTimestamp("end_zeit")), resultSet.getDate("start_datum"),
                         resultSet.getDate("end_datum"), resultSet.getString("raum"),
                         resultSet.getString("prof"), resultSet.getString("bemerkung"), resultSet.getString("art"), resultSet.getString("ausfall")));
             }
-            GenericEntity<List<Termin>> myEntity = new GenericEntity<List<Termin>>(responseList) {};
+            GenericEntity<Set<Termin>> myEntity = new GenericEntity<Set<Termin>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -129,7 +129,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getDetailsOfCourse(String hsid, int vstid, int terminid) {
-        List<Termin> responseList = new LinkedList<>();
+        Set<Termin> responseList = new HashSet<>();
 
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM VLTERMIN " +
@@ -139,11 +139,11 @@ public class LSFResource implements LSFContract{
             preparedStatement.setInt(3, terminid);
             ResultSet resultSet = preparedStatement.executeQuery();
             responseList.add(new Termin(resultSet.getInt("terminid"), resultSet.getInt("rowid"), resultSet.getString("fach"),
-                    resultSet.getInt("tag"), LectureReconstructor.createCalendar(resultSet.getTimestamp("start_zeit")),
+                    resultSet.getInt("fachid"), resultSet.getInt("tag"), LectureReconstructor.createCalendar(resultSet.getTimestamp("start_zeit")),
                     LectureReconstructor.createCalendar(resultSet.getTimestamp("end_zeit")), resultSet.getDate("start_datum"),
                     resultSet.getDate("end_datum"), resultSet.getString("raum"),
                     resultSet.getString("prof"), resultSet.getString("bemerkung"), resultSet.getString("art"), resultSet.getString("ausfall")));
-            GenericEntity<List<Termin>> myEntity = new GenericEntity<List<Termin>>(responseList) {};
+            GenericEntity<Set<Termin>> myEntity = new GenericEntity<Set<Termin>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
         } catch (SQLException e) {
             e.printStackTrace();
