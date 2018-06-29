@@ -5,15 +5,15 @@ import Server.Util.Database.DBHandler;
 import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
 import Server.Util.Threading.ThreadCreator;
-import com.sun.net.httpserver.HttpServer;
-import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
 import lsfserver.api.Institute.Veranstaltung;
 import lsfserver.api.Pluggable;
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,17 +59,35 @@ public class RestServerStarter {
         long end = System.currentTimeMillis();
 
         System.out.println("This took: " + (end - begin) / 1000);
-        ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
+        //ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
 
         try {
             System.out.println("Starting Server");
             String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
             URI uri = new URI(uristring);
+            /*
             HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
             System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
             System.out.println("Server started at Port " + httpServer.getAddress().getPort());
+            */
+            Server server = new Server(Integer.valueOf(configReader.getProperty(ConfigReader.HOSTPORT)));
 
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            context.setContextPath("/");
+            server.setHandler(context);
+
+            ServletHolder jerseyServlet = context.addServlet(ServletContainer.class, "/*");
+            jerseyServlet.setInitOrder(0);
+
+            jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", LSFResource.class.getCanonicalName());
+
+            server.start();
+            server.join();
         } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
