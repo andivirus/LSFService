@@ -26,9 +26,10 @@ public class HSWorms implements Pluggable {
 
     private String instituteid;
 
-    private Document connection;
+    //private Document connection;
 
     public HSWorms() throws IOException {
+        Document connection = null;
         try {
             connection = Jsoup.connect(hsurl).get();
         }
@@ -61,6 +62,16 @@ public class HSWorms implements Pluggable {
      */
     @Override
     public Institute getInstitute(){
+        Document connection = null;
+        try {
+            connection = Jsoup.connect(hsurl).get();
+        }
+        catch (UnknownHostException e){
+            System.err.println("Host not found. Check your internet connection.");
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
         String title = connection.title().trim();
         return new Institute(instituteid, title);
     }
@@ -72,6 +83,16 @@ public class HSWorms implements Pluggable {
     @Override
     public List<Studiengang> getCurriculli(){
 
+        Document connection = null;
+        try {
+            connection = Jsoup.connect(hsurl).get();
+        }
+        catch (UnknownHostException e){
+            System.err.println("Host not found. Check your internet connection.");
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
         Element element = connection.body();
         Elements link = element.getElementsContainingOwnText("Studiengangpläne (Liste)");
         if(!link.isEmpty()) {

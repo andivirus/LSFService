@@ -31,38 +31,45 @@ public class RestServerStarter {
 
 
     public static void main(String[] args) {
-        new RestServerStarter();
+        if(Arrays.asList(args).contains("-h")){
+            System.out.println("--noupdate : does not recreate the database upon start, even if its old");
+            System.exit(0);
+        }
+        new RestServerStarter(args);
     }
 
-    public RestServerStarter(){
+    public RestServerStarter(String[] args){
+        long begin = System.currentTimeMillis();
         ConfigReader configReader = new ConfigReader();
         DBHandler dbHandler = DBHandler.getInstance(configReader.getProperty(ConfigReader.DATABASE_PATH));
-        dbHandler.createDatabase();
-        try {
-            long begin = System.currentTimeMillis();
+        if(!Arrays.asList(args).contains("--noupdate")) {
+            dbHandler.createDatabase();
+            try {
 
-            if (dbHandler.isUpdateNecessary()){
-                dbHandler.clearDatabase();
-                initDatabase(dbHandler);
+                if (dbHandler.isUpdateNecessary()) {
+                    dbHandler.clearDatabase();
+                    initDatabase(dbHandler);
+                }
             }
 
-            long end = System.currentTimeMillis();
-
-            System.out.println("This took: " + (end-begin)/1000);
-            ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
-
-            try {
-                System.out.println("Starting Server");
-                String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
-                URI uri = new URI(uristring);
-                HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
-                System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
-                System.out.println("Server started at Port " + httpServer.getAddress().getPort());
-
-            } catch (URISyntaxException e) {
+            catch (IOException e) {
                 e.printStackTrace();
             }
-        } catch (IOException e) {
+        }
+        long end = System.currentTimeMillis();
+
+        System.out.println("This took: " + (end - begin) / 1000);
+        ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
+
+        try {
+            System.out.println("Starting Server");
+            String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
+            URI uri = new URI(uristring);
+            HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
+            System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
+            System.out.println("Server started at Port " + httpServer.getAddress().getPort());
+
+        } catch (URISyntaxException e) {
             e.printStackTrace();
         }
     }

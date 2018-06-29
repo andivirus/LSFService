@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.11.3'
     implementation 'org.xerial:sqlite-jdbc:3.21.0.1'
     implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.0'
-    implementation 'javax.servlet:javax.servlet-api:3.0.1'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
     compile project(':api')
 }
 

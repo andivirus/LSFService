@@ -49,6 +49,7 @@ public class ConfigReader {
     }
 
     public String getProperty(String key){
+        System.out.println("Getting Property: " + key + "\n" + "Value: " + properties.getProperty(key));
         return properties.getProperty(key);
     }
 }
