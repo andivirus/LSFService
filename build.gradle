@@ -37,6 +37,8 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.0'
     implementation 'javax.ws.rs:javax.ws.rs-api:2.1'
     implementation 'javax.activation:activation:1.1.1'
+    implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.0.1'
     compile project(':api')
 }
 

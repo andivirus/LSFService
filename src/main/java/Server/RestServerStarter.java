@@ -2,6 +2,7 @@ package Server;
 
 import Server.Util.Config.ConfigReader;
 import Server.Util.Database.DBHandler;
+import Server.Util.ExceptionMapper.HelpExceptionMapper;
 import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
 import Server.Util.Threading.ThreadCreator;
@@ -79,7 +80,7 @@ public class RestServerStarter {
             ServletHolder jerseyServlet = context.addServlet(ServletContainer.class, "/*");
             jerseyServlet.setInitOrder(0);
 
-            jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", LSFResource.class.getCanonicalName());
+            jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", LSFResource.class.getCanonicalName() + ", " + HelpExceptionMapper.class.getCanonicalName());
 
             server.start();
             server.join();
