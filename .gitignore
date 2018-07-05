@@ -111,3 +111,5 @@ gradle-app.setting
 
 database/
 props.cfg
+
+copy

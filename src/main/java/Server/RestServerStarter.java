@@ -64,13 +64,7 @@ public class RestServerStarter {
 
         try {
             System.out.println("Starting Server");
-            String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
-            URI uri = new URI(uristring);
-            /*
-            HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
-            System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
-            System.out.println("Server started at Port " + httpServer.getAddress().getPort());
-            */
+
             Server server = new Server(Integer.valueOf(configReader.getProperty(ConfigReader.HOSTPORT)));
 
             ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
