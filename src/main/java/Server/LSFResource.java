@@ -20,7 +20,6 @@ public class LSFResource implements LSFContract{
     private Connection connection;
 
     public LSFResource(){
-
         try {
             connection = DriverManager.getConnection(DBHandler.DB_URL);
         } catch (SQLException e) {
@@ -30,7 +29,7 @@ public class LSFResource implements LSFContract{
     }
     @Override
     public Response getListOfInstitutes() {
-        System.out.println("Incoming Query: List of Institutes");
+        System.out.println("Incoming Query: List of institutes");
         List<Institute> responseList = new LinkedList<>();
         try {
             Statement statement = connection.createStatement();
@@ -48,7 +47,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfStudiengaenge(String hsid) {
-        System.out.println("Incoming Query: List of Majors: " + hsid);
+        System.out.println("Incoming Query: List of majors: " + hsid);
         List<Studiengang> responseList = new LinkedList<>();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Studiengaenge WHERE instituteid = ?");
@@ -68,7 +67,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfCourses(String hsid, int stid) {
-        System.out.println("Incoming Query: List of Courses [Institute - MajorID] " + hsid + " - " + stid);
+        System.out.println("Incoming Query: List of courses [Institute - MajorID] " + hsid + " - " + stid);
         List<Veranstaltung> responseList = new LinkedList<>();
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Veranstaltung " +
@@ -92,6 +91,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getListOfLectures(String hsid, int vstid) {
+        System.out.println("Incoming Query: List of lectures [Institute - CourseID] " + hsid + " - " + vstid);
         Set<Termin> responseList = new HashSet<>();
 
         try{
@@ -117,6 +117,7 @@ public class LSFResource implements LSFContract{
 
     @Override
     public Response getDetailsOfCourse(String hsid, int vstid, int terminid) {
+        System.out.println("Incoming Query: Details of course [Institute - CourseID - ApponintmentID] " + hsid + " - " + vstid + " - " + terminid);
         Set<Termin> responseList = new HashSet<>();
 
         try{
