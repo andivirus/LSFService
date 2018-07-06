@@ -5,7 +5,6 @@ import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
 import lsfserver.api.Institute.Veranstaltung;
-import lsfserver.api.Pluggable;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Path;
@@ -17,21 +16,10 @@ import java.util.*;
 @Path( "/" )
 @Singleton
 public class LSFResource implements LSFContract{
-    private Pluggable hs;
-    private LinkedList<Institute> instituteList;
-    private LinkedList<Studiengang> studiengangList;
-    private LinkedList<Veranstaltung> veranstaltungList;
-    private LinkedList<Termin> terminList;
 
     private Connection connection;
 
     public LSFResource(){
-
-        hs = RestServerStarter.hs;
-        instituteList = (LinkedList<Institute>) RestServerStarter.instituteList;
-        studiengangList = (LinkedList<Studiengang>) RestServerStarter.studiengangList;
-        veranstaltungList = (LinkedList<Veranstaltung>) RestServerStarter.veranstaltungList;
-        terminList = (LinkedList<Termin>) RestServerStarter.terminList;
 
         try {
             connection = DriverManager.getConnection(DBHandler.DB_URL);

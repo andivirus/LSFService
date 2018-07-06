@@ -24,10 +24,10 @@ import java.util.*;
 
 public class RestServerStarter {
     public static Pluggable hs;
-    public static List<Institute> instituteList;
-    public static List<Studiengang> studiengangList;
-    public static List<Veranstaltung> veranstaltungList;
-    public static List<Termin> terminList;
+    public static final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
+    public static final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
+    public static final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
+    public static final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
 
 
     public static void main(String[] args) {
@@ -37,67 +37,75 @@ public class RestServerStarter {
     public RestServerStarter(){
         ConfigReader configReader = new ConfigReader();
         DBHandler dbHandler = DBHandler.getInstance(configReader.getProperty(ConfigReader.DATABASE_PATH));
+
         dbHandler.createDatabase();
+
+        long begin = System.currentTimeMillis();
+
+        if (dbHandler.isUpdateNecessary()){
+            dbHandler.clearDatabase();
+            initDatabase(dbHandler);
+        }
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("This took: " + (end-begin)/1000);
+        ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
+
         try {
-            long begin = System.currentTimeMillis();
+            System.out.println("Starting Server");
+            String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
+            URI uri = new URI(uristring);
+            HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
+            System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
+            System.out.println("Server started at Port " + httpServer.getAddress().getPort());
 
-            if (dbHandler.isUpdateNecessary()){
-                dbHandler.clearDatabase();
-                initDatabase(dbHandler);
-            }
-
-            long end = System.currentTimeMillis();
-
-            System.out.println("This took: " + (end-begin)/1000);
-            ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
-
-            try {
-                System.out.println("Starting Server");
-                String uristring = configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT) + "/";
-                URI uri = new URI(uristring);
-                HttpServer httpServer = JdkHttpServerFactory.createHttpServer(uri, resourceConfig);
-                System.out.println("Server started at adress " + httpServer.getAddress().getHostName());
-                System.out.println("Server started at Port " + httpServer.getAddress().getPort());
-
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
+        } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+
     }
 
-    private void initDatabase(DBHandler dbHandler) throws IOException {
+    private void initDatabase(DBHandler dbHandler){
         System.out.println("Scraping Data for Database");
         List<Pluggable> plugins;
-        plugins = PluginLoader.loadPlugins(new File("./plugins"));
-        instituteList = new LinkedList<>();
-        studiengangList = new LinkedList<>();
-        veranstaltungList = new LinkedList<>();
-        terminList = new LinkedList<>();
+        try {
+            plugins = PluginLoader.loadPlugins(new File("./plugins"));
 
-        System.out.println("Found Plugins:");
-        for (String s :
-                new File("./plugins").list(new JarFilenameFilter())) {
-            System.out.println(s);
+            System.out.println("Found Plugins:");
+            for (String s :
+                    Objects.requireNonNull(new File("./plugins").list(new JarFilenameFilter()))) {
+                System.out.println(s);
+            }
+            for (Pluggable hs :
+                    plugins) {
+                RestServerStarter.hs = hs;
+                hs.start();
+                try {
+                    instituteList.add(hs.getInstitute());
+                    studiengangList.addAll(hs.getCurriculli());
+
+                    ThreadCreator threadCreator = ThreadCreator.instantiate();
+                    threadCreator.doJob(studiengangList);
+                    threadCreator.doJob(veranstaltungList);
+                }
+                catch (IOException e){
+                    System.err.println("Fatal error while gathering data. Exiting.");
+                    System.exit(1);
+                }
+
+                dbHandler.putIntoDatabase(instituteList, studiengangList,
+                        veranstaltungList, terminList);
+                instituteList.clear();
+                studiengangList.clear();
+                veranstaltungList.clear();
+                terminList.clear();
+            }
+        } catch (IOException e) {
+            System.err.println("No plugins found. Exiting.");
+            //e.printStackTrace();
+            System.exit(1);
         }
-        for (Pluggable hs :
-                plugins) {
-            RestServerStarter.hs = hs;
-            hs.start();
-            instituteList.add(hs.getInstitute());
-            studiengangList.addAll(hs.getCurriculli());
 
-            ThreadCreator threadCreator = ThreadCreator.instantiate();
-            threadCreator.doJob(studiengangList);
-            threadCreator.doJob(veranstaltungList);
-
-            dbHandler.putIntoDatabase(instituteList, studiengangList,
-                    veranstaltungList, terminList);
-            instituteList.clear();
-            studiengangList.clear();
-            veranstaltungList.clear();
-            terminList.clear();
-        }
     }
 }

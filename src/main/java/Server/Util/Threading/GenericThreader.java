@@ -7,7 +7,7 @@ import lsfserver.api.Institute.Veranstaltung;
 import java.util.List;
 
 public class GenericThreader implements Runnable{
-    List<?> innerCollection;
+    private List<?> innerCollection;
 
     public GenericThreader(List<?> list, final int i){
         innerCollection = list;
@@ -33,11 +33,15 @@ public class GenericThreader implements Runnable{
                 innerCollection) {
             if(type == STUDIENGANG){
                 Studiengang s = (Studiengang) o;
-                RestServerStarter.veranstaltungList.addAll(RestServerStarter.hs.getLectures(s.getId()));
+                synchronized (RestServerStarter.veranstaltungList) {
+                    RestServerStarter.veranstaltungList.addAll(RestServerStarter.hs.getLectures(s.getId()));
+                }
             }
             if(type == VERANSTALTUNG){
                 Veranstaltung va = (Veranstaltung) o;
-                RestServerStarter.terminList.addAll(RestServerStarter.hs.getLectureTimes(va.getName(), va.getId()));
+                synchronized (RestServerStarter.terminList) {
+                    RestServerStarter.terminList.addAll(RestServerStarter.hs.getLectureTimes(va.getName(), va.getId()));
+                }
             }
         }
     }
