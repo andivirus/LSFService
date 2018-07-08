@@ -46,7 +46,6 @@ public class RestServerStarter {
         if(!Arrays.asList(args).contains("--noupdate")) {
             dbHandler.createDatabase();
                 if (dbHandler.isUpdateNecessary()) {
-                    dbHandler.clearDatabase();
                     initDatabase(dbHandler);
                 }
 
@@ -72,10 +71,6 @@ public class RestServerStarter {
 
             server.start();
             server.join();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -110,8 +105,10 @@ public class RestServerStarter {
                     System.exit(1);
                 }
 
+                dbHandler.clearDatabase();
                 dbHandler.putIntoDatabase(instituteList, studiengangList,
                         veranstaltungList, terminList);
+
                 instituteList.clear();
                 studiengangList.clear();
                 veranstaltungList.clear();
