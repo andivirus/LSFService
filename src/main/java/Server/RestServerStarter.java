@@ -2,7 +2,6 @@ package Server;
 
 import Server.Util.Config.ConfigReader;
 import Server.Util.Database.DBHandler;
-import Server.Util.ExceptionMapper.HelpExceptionMapper;
 import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
 import Server.Util.Threading.ThreadCreator;
@@ -12,13 +11,19 @@ import lsfserver.api.Institute.Termin;
 import lsfserver.api.Institute.Veranstaltung;
 import lsfserver.api.Pluggable;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.listing.ApiListingResource;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -60,14 +65,16 @@ public class RestServerStarter {
 
             Server server = new Server(Integer.valueOf(configReader.getProperty(ConfigReader.HOSTPORT)));
 
-            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-            context.setContextPath("/");
-            server.setHandler(context);
+            final HandlerList handlerList = new HandlerList();
 
-            ServletHolder jerseyServlet = context.addServlet(ServletContainer.class, "/*");
-            jerseyServlet.setInitOrder(0);
+            buildSwagger();
+            handlerList.addHandler(buildSwaggerUI());
+            handlerList.addHandler(buildContext());
 
-            jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", LSFResource.class.getCanonicalName() + ", " + HelpExceptionMapper.class.getCanonicalName());
+
+
+
+            server.setHandler(handlerList);
 
             server.start();
             server.join();
@@ -75,6 +82,36 @@ public class RestServerStarter {
             e.printStackTrace();
         }
 
+    }
+
+    private static void buildSwagger(){
+        BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage(LSFContract.class.getPackage().getName());
+        beanConfig.setScan(true);
+        beanConfig.setSchemes(new String[]{"http"});
+        beanConfig.setHost("localhost:" + new ConfigReader().getProperty(ConfigReader.HOSTPORT));
+        beanConfig.setBasePath("/");
+    }
+
+    private static ContextHandler buildContext(){
+        ResourceConfig resourceConfig = new ResourceConfig();
+        resourceConfig.packages(LSFContract.class.getPackage().getName(), ApiListingResource.class.getPackage().getName());
+        ServletContainer container = new ServletContainer(resourceConfig);
+        ServletHolder holder = new ServletHolder(container);
+        ServletContextHandler lsfcontext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        lsfcontext.setContextPath("/");
+        lsfcontext.addServlet(holder, "/*");
+
+        return lsfcontext;
+    }
+
+    private static ContextHandler buildSwaggerUI() throws URISyntaxException {
+        final ResourceHandler swaggeruiresourcehandler = new ResourceHandler();
+        swaggeruiresourcehandler.setResourceBase(RestServerStarter.class.getClassLoader().getResource("dist").toURI().toString());
+        final ContextHandler swaggerUIContext = new ContextHandler();
+        swaggerUIContext.setContextPath("/docs/");
+        swaggerUIContext.setHandler(swaggeruiresourcehandler);
+        return swaggerUIContext;
     }
 
     private void initDatabase(DBHandler dbHandler){
