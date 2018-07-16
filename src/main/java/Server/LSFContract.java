@@ -20,7 +20,6 @@ public interface LSFContract {
     @ApiOperation(value = "Gets all institutes",
     response = Institute.class,
     responseContainer = "List")
-    @Consumes("text/plain")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     /**
      * @return name, id der hochschulen
@@ -33,13 +32,12 @@ public interface LSFContract {
     @ApiOperation(value = "Gets all majors of an institute",
             response = Studiengang.class,
             responseContainer = "List")
-    @Consumes("text/plain")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     /**
      * @return name, id der studiengänge an der HS
      * TODO: hsid als String aus webadresse?
      */
-    Response getListOfStudiengaenge(@PathParam("hsid") String hsid);
+    Response getListOfMajors(@PathParam("hsid") String hsid);
 
 
     @GET
@@ -47,7 +45,6 @@ public interface LSFContract {
     @ApiOperation(value = "Gets all Courses of a major at an institute",
             response = Veranstaltung.class,
             responseContainer = "List")
-    @Consumes("text/plain")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     /**
      * @return liste aller Veranstaltungen in einem studiengang
@@ -57,7 +54,6 @@ public interface LSFContract {
 
     @GET
     @Path( "/institute/{hsid}/veranstaltung/{vstid}/termine" )
-    @Consumes("text/plain")
     @ApiOperation(value = "Gets all appointments of a course at an institute",
             response = Termin.class,
             responseContainer = "List")
@@ -69,7 +65,6 @@ public interface LSFContract {
 
     @GET
     @Path( "/institute/{hsid}/veranstaltung/{vstid}/termine/{terminid}" )
-    @Consumes("text/plain")
     @ApiOperation(value = "Gets a certain appointment",
             response = Termin.class)
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

@@ -45,13 +45,13 @@ public class DBHandler {
                 while (resultSet.next()) {
                     System.out.println("LastUpdate: " + resultSet.getTimestamp(1).toString());
                     System.out.println("Current Time:  " + new java.util.Date().toString());
-                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000)) {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000));
+                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000)) {
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000));
                         System.out.println("Skipping Database input");
                         lastupdate.close();
                         return false;
                     } else {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (90 * 60 * 1000));
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000));
                         lastupdate.close();
                         return true;
                     }

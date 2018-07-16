@@ -1,6 +1,8 @@
-package Server;
+package Server.v1;
 
+import Server.LSFContract;
 import Server.Util.Database.DBHandler;
+import io.swagger.annotations.Api;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
@@ -13,20 +15,21 @@ import javax.ws.rs.core.Response;
 import java.sql.*;
 import java.util.*;
 
-@Path( "/" )
+@Api(value = "Version 1")
+@Path( "/v1/" )
 @Singleton
-public class LSFResource implements LSFContract{
+public class LSFResourcev1 implements LSFContract {
 
     private Connection connection;
 
-    public LSFResource(){
+    public LSFResourcev1(){
         try {
             connection = DriverManager.getConnection(DBHandler.DB_URL);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
+
     @Override
     public Response getListOfInstitutes() {
         System.out.println("Incoming Query: List of institutes");
@@ -46,7 +49,7 @@ public class LSFResource implements LSFContract{
     }
 
     @Override
-    public Response getListOfStudiengaenge(String hsid) {
+    public Response getListOfMajors(String hsid) {
         System.out.println("Incoming Query: List of majors: " + hsid);
         List<Studiengang> responseList = new LinkedList<>();
         try {

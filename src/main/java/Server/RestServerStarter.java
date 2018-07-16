@@ -5,6 +5,8 @@ import Server.Util.Database.DBHandler;
 import Server.Util.Plugin.JarFilenameFilter;
 import Server.Util.Plugin.PluginLoader;
 import Server.Util.Threading.ThreadCreator;
+import Server.v1.LSFResourcev1;
+import Server.v2.LSFResourcev2;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
@@ -58,7 +60,6 @@ public class RestServerStarter {
         long end = System.currentTimeMillis();
 
         System.out.println("This took: " + (end - begin) / 1000);
-        //ResourceConfig resourceConfig = new ResourceConfig(LSFResource.class, OpenApiResource.class);
 
         try {
             System.out.println("Starting Server");
@@ -69,7 +70,7 @@ public class RestServerStarter {
 
             buildSwagger();
             handlerList.addHandler(buildSwaggerUI());
-            handlerList.addHandler(buildContext());
+            handlerList.addHandler(buildApi());
 
 
 
@@ -93,15 +94,16 @@ public class RestServerStarter {
         beanConfig.setBasePath("/");
     }
 
-    private static ContextHandler buildContext(){
+    private static ContextHandler buildApi(){
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages(LSFContract.class.getPackage().getName(), ApiListingResource.class.getPackage().getName());
+        resourceConfig.packages(LSFResourcev1.class.getPackage().getName(),
+                LSFResourcev2.class.getPackage().getName(),
+                ApiListingResource.class.getPackage().getName());
         ServletContainer container = new ServletContainer(resourceConfig);
         ServletHolder holder = new ServletHolder(container);
         ServletContextHandler lsfcontext = new ServletContextHandler(ServletContextHandler.SESSIONS);
         lsfcontext.setContextPath("/");
         lsfcontext.addServlet(holder, "/*");
-
         return lsfcontext;
     }
 
