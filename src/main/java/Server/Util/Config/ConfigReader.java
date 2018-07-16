@@ -17,8 +17,8 @@ public class ConfigReader {
     public ConfigReader(){
         File file = new File(path);
 
-        System.out.println("FILE CAN WRITE: " + file.canWrite());
-        if(!file.canWrite() || !file.canRead()){
+        File parent = new File(file.getAbsoluteFile().getParent());
+        if(!parent.canWrite() || !parent.canRead()){
             System.err.println("Cant write and/or read files from this directory.");
             System.err.println("Please fix permissions or move the application");
             System.exit(1);
@@ -41,7 +41,8 @@ public class ConfigReader {
         //properties.setProperty(DATABASE_PATH, "./database/lsf.db");
         Scanner sc = new Scanner(System.in);
         System.out.println("Please enter database path (default value: ./database/lsf.db): ");
-        String input = sc.next();
+        String input = sc.nextLine();
+        System.out.println(input);
         if(input.equals("")){
             properties.setProperty(DATABASE_PATH, "./database/lsf.db");
         }
