@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.InputMismatchException;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class ConfigReader {
     public static final String DATABASE_PATH = "databasePath";
@@ -38,9 +39,9 @@ public class ConfigReader {
     }
 
     private void setDefaultProps(File file){
-        //properties.setProperty(DATABASE_PATH, "./database/lsf.db");
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Please enter database path (default value: ./database/lsf.db): ");
+        Scanner sc = new Scanner(System.in).useDelimiter(Pattern.compile("\\n|(\\r\\n)"));
+        System.out.println(sc.delimiter().toString());
+        System.out.print("Please enter database path (default value: ./database/lsf.db): ");
         String input = sc.nextLine();
         System.out.println(input);
         if(input.equals("")){
@@ -49,9 +50,7 @@ public class ConfigReader {
         else {
             properties.setProperty(DATABASE_PATH, input);
         }
-        //properties.setProperty(UPDATE_TIME, "6");
-        //properties.setProperty(HOSTADRESS, "http://localhost");
-        System.out.println("Please enter port (default: 8090): ");
+        System.out.print("Please enter port (default: 8090): ");
         try {
             int in_val = sc.nextInt();
             properties.setProperty(HOSTPORT, String.valueOf(in_val));
