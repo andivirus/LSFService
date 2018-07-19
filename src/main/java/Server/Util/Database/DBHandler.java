@@ -1,5 +1,6 @@
 package Server.Util.Database;
 
+import Server.Util.Config.ConfigReader;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Veranstaltung;
 import lsfserver.api.Institute.Studiengang;
@@ -67,7 +68,13 @@ public class DBHandler {
     }
 
     public void createDatabase(){
-        File dir = new File("database");
+        //File dir = new File("database");
+        File dir = new File(ConfigReader.instance().getProperty(ConfigReader.DATABASE_PATH)).getParentFile();
+        if(!dir.canWrite() || !dir.canRead()){
+            System.err.println("Cant write and/or read files from database directory.");
+            System.err.println("Please fix permissions or change the database directory");
+            System.exit(1);
+        }
         dir.mkdir();
         Connection connection = null;
         Statement statement = null;

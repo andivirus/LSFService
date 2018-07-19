@@ -1,7 +1,6 @@
 package Server.Util.Config;
 
 import java.io.*;
-import java.util.InputMismatchException;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -15,7 +14,17 @@ public class ConfigReader {
     private static String path = "props.cfg";
     private Properties properties;
 
-    public ConfigReader(){
+    private static ConfigReader singleton = null;
+
+    public static ConfigReader instance(){
+        if(singleton == null){
+            singleton = new ConfigReader();
+        }
+        return singleton;
+
+    }
+
+    private ConfigReader(){
         File file = new File(path);
 
         File parent = new File(file.getAbsoluteFile().getParent());
@@ -41,7 +50,7 @@ public class ConfigReader {
     private void setDefaultProps(File file){
         Scanner sc = new Scanner(System.in).useDelimiter(Pattern.compile("\\n|(\\r\\n)"));
         System.out.println(sc.delimiter().toString());
-        System.out.print("Please enter database path (default value: ./database/lsf.db): ");
+        System.out.print("Please enter database file path (default value: ./database/lsf.db): ");
         String input = sc.nextLine();
         System.out.println(input);
         if(input.equals("")){
@@ -50,12 +59,25 @@ public class ConfigReader {
         else {
             properties.setProperty(DATABASE_PATH, input);
         }
+
+        System.out.println("Please enter host address (default: localhost): ");
+        input = sc.nextLine();
+        if(input.equals("")){
+            properties.setProperty(HOSTADRESS, "localhost");
+        }
+        else {
+            properties.setProperty(HOSTADRESS, input);
+        }
+
         System.out.print("Please enter port (default: 8090): ");
         try {
-            int in_val = sc.nextInt();
+            int in_val = 0;
+            input = sc.nextLine();
+            Integer.valueOf(input);
             properties.setProperty(HOSTPORT, String.valueOf(in_val));
         }
-        catch (InputMismatchException e){
+        catch (NumberFormatException e){
+            System.out.println("No port specified, defaulting to 8090.");
             properties.setProperty(HOSTPORT, "8090");
         }
 

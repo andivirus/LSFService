@@ -48,7 +48,7 @@ public class RestServerStarter {
 
     public RestServerStarter(String[] args){
         long begin = System.currentTimeMillis();
-        ConfigReader configReader = new ConfigReader();
+        ConfigReader configReader = ConfigReader.instance();
         DBHandler dbHandler = DBHandler.getInstance(configReader.getProperty(ConfigReader.DATABASE_PATH));
         if(!Arrays.asList(args).contains("--noupdate")) {
             dbHandler.createDatabase();
@@ -68,7 +68,7 @@ public class RestServerStarter {
 
             final HandlerList handlerList = new HandlerList();
 
-            buildSwagger();
+            buildSwagger(configReader);
             handlerList.addHandler(buildSwaggerUI());
             handlerList.addHandler(buildApi());
 
@@ -85,12 +85,13 @@ public class RestServerStarter {
 
     }
 
-    private static void buildSwagger(){
+    private static void buildSwagger(ConfigReader configReader){
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setResourcePackage(LSFContract.class.getPackage().getName());
         beanConfig.setScan(true);
         beanConfig.setSchemes(new String[]{"http"});
-        beanConfig.setHost("localhost:" + new ConfigReader().getProperty(ConfigReader.HOSTPORT));
+        //beanConfig.setHost("andpi.goip.de:" + configReader.getProperty(ConfigReader.HOSTPORT));
+        beanConfig.setHost(configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT));
         beanConfig.setBasePath("/");
     }
 
@@ -155,7 +156,6 @@ public class RestServerStarter {
             }
         } catch (IOException e) {
             System.err.println("No plugins found. Exiting.");
-            //e.printStackTrace();
             System.exit(1);
         }
 
