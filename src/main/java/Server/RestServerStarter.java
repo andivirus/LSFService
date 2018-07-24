@@ -27,6 +27,10 @@ import io.swagger.jaxrs.listing.ApiListingResource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -176,17 +180,27 @@ public class RestServerStarter {
     private class DBUpdater implements Runnable {
         private DBHandler dbHandler;
 
-        private DBUpdater(){
-        }
-
-        public DBUpdater(DBHandler dbHandler){
+        DBUpdater(DBHandler dbHandler){
             this.dbHandler = dbHandler;
         }
 
         @Override
         public void run() {
             initDatabase(dbHandler);
-            scheduler.schedule(new DBUpdater(dbHandler), 5, TimeUnit.SECONDS);
+            LocalDateTime now = LocalDateTime.now();
+            LocalTime target = LocalTime.now().withHour(5).withMinute(0).withSecond(0).withNano(0);
+
+            LocalDateTime targetDateTime = target.atDate(LocalDate.now());
+            if(now.toLocalTime().isAfter(target)) {
+                targetDateTime = targetDateTime.plusDays(1);
+            }
+
+            Duration timespan = Duration.between(now, targetDateTime);
+
+            System.out.println("Next update: " + targetDateTime);
+            System.out.println("Timespan: " + timespan.toString());
+
+            scheduler.schedule(new DBUpdater(dbHandler), timespan.getSeconds(), TimeUnit.SECONDS);
         }
     }
 }
