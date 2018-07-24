@@ -28,6 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 
 public class RestServerStarter {
@@ -36,6 +40,8 @@ public class RestServerStarter {
     public static final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
     public static final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
     public static final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 
     public static void main(String[] args) {
@@ -53,7 +59,13 @@ public class RestServerStarter {
         if(!Arrays.asList(args).contains("--noupdate")) {
             dbHandler.createDatabase();
                 if (dbHandler.isUpdateNecessary()) {
-                    initDatabase(dbHandler);
+                    //initDatabase(dbHandler);
+                    ScheduledFuture<?> task = scheduler.schedule(new DBUpdater(dbHandler), 1, TimeUnit.SECONDS);
+                    while(true){
+                        if(task.isDone()){
+                            break;
+                        }
+                    }
                 }
 
         }
@@ -155,11 +167,26 @@ public class RestServerStarter {
                     terminList.clear();
                 }
             }
+        } catch(IOException e){
+            System.err.println("No plugins found. Exiting.");
+            System.exit(1);
+        }
+    }
 
-            } catch(IOException e){
-                System.err.println("No plugins found. Exiting.");
-                System.exit(1);
-            }
+    private class DBUpdater implements Runnable {
+        private DBHandler dbHandler;
 
+        private DBUpdater(){
+        }
+
+        public DBUpdater(DBHandler dbHandler){
+            this.dbHandler = dbHandler;
+        }
+
+        @Override
+        public void run() {
+            initDatabase(dbHandler);
+            scheduler.schedule(new DBUpdater(dbHandler), 5, TimeUnit.SECONDS);
+        }
     }
 }
