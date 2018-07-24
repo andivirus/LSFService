@@ -3,6 +3,7 @@ package Server;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lsfserver.api.Institute.Institute;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Termin;
@@ -37,7 +38,8 @@ public interface LSFContract {
      * @return name, id der studiengänge an der HS
      * TODO: hsid als String aus webadresse?
      */
-    Response getListOfMajors(@PathParam("hsid") String hsid);
+    Response getListOfMajors(@ApiParam(value = "id of institute returned in /institutes request", required = true, example = "hs-worms.de")
+                             @PathParam("hsid") String hsid);
 
 
     @GET
@@ -49,7 +51,10 @@ public interface LSFContract {
     /**
      * @return liste aller Veranstaltungen in einem studiengang
      */
-    Response getListOfCourses(@PathParam("hsid") String hsid, @PathParam("stid") int stid);
+    Response getListOfCourses(@ApiParam(value = "id of institute in hsid of object returned in /institute/{hsid}/studiengaenge request", required = true, example = "hs-worms.de")
+                              @PathParam("hsid") String hsid,
+                              @ApiParam(value = "id of object returned in /institute/{hsid}/studiengaenge request", required = true, example = "105")
+                              @PathParam("stid") int stid);
 
 
     @GET
@@ -61,13 +66,21 @@ public interface LSFContract {
     /**
      * @return liste aller Termine einer Veranstaltung
      */
-    Response getListOfLectures(@PathParam("hsid") String hsid, @PathParam("vstid") int vstid);
+    Response getListOfLectures(@ApiParam(value = "id of institute", required = true, example = "hs-worms.de")
+            @PathParam("hsid") String hsid,
+            @ApiParam(value = "id of course appointments are needed of", required = true, example = "40662")
+            @PathParam("vstid") int vstid);
 
     @GET
     @Path( "/institute/{hsid}/veranstaltung/{vstid}/termine/{terminid}" )
     @ApiOperation(value = "Gets a certain appointment",
             response = Termin.class)
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    Response getDetailsOfCourse(@PathParam("hsid") String hsid, @PathParam("vstid") int vstid, @PathParam("terminid") int terminid);
+    Response getDetailsOfCourse(@ApiParam(value = "id of institute", required = true, example = "hs-worms.de")
+                                @PathParam("hsid") String hsid,
+                                @ApiParam(value = "id of course appointments are needed of", required = true, example = "40662")
+                                @PathParam("vstid") int vstid,
+                                @ApiParam(value = "id of appointment in /institute/{hsid}/veranstaltung/{vstid}/termine request", required = true, example = "0")
+                                @PathParam("terminid") int terminid);
 }
 

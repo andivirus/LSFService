@@ -70,7 +70,8 @@ public class DBHandler {
     public void createDatabase(){
         //File dir = new File("database");
         File dir = new File(ConfigReader.instance().getProperty(ConfigReader.DATABASE_PATH)).getParentFile();
-        if(!dir.canWrite() || !dir.canRead()){
+        if(!dir.getParentFile().canWrite() || !dir.getParentFile().canRead()){
+            System.out.println(dir.getParentFile().getPath());
             System.err.println("Cant write and/or read files from database directory.");
             System.err.println("Please fix permissions or change the database directory");
             System.exit(1);

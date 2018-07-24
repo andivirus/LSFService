@@ -49,21 +49,21 @@ public class ConfigReader {
 
     private void setDefaultProps(File file){
         Scanner sc = new Scanner(System.in).useDelimiter(Pattern.compile("\\n|(\\r\\n)"));
-        System.out.println(sc.delimiter().toString());
         System.out.print("Please enter database file path (default value: ./database/lsf.db): ");
         String input = sc.nextLine();
-        System.out.println(input);
         if(input.equals("")){
             properties.setProperty(DATABASE_PATH, "./database/lsf.db");
+            System.out.println("No custom database path specified, defaulting to ./database/lsf.db");
         }
         else {
             properties.setProperty(DATABASE_PATH, input);
         }
 
-        System.out.println("Please enter host address (default: localhost): ");
+        System.out.print("Please enter host address (default: localhost): ");
         input = sc.nextLine();
         if(input.equals("")){
             properties.setProperty(HOSTADRESS, "localhost");
+            System.out.println("No host address specified, defaulting to localhost");
         }
         else {
             properties.setProperty(HOSTADRESS, input);

@@ -90,7 +90,6 @@ public class RestServerStarter {
         beanConfig.setResourcePackage(LSFContract.class.getPackage().getName());
         beanConfig.setScan(true);
         beanConfig.setSchemes(new String[]{"http"});
-        //beanConfig.setHost("andpi.goip.de:" + configReader.getProperty(ConfigReader.HOSTPORT));
         beanConfig.setHost(configReader.getProperty(ConfigReader.HOSTADRESS) + ":" + configReader.getProperty(ConfigReader.HOSTPORT));
         beanConfig.setBasePath("/");
     }
@@ -112,7 +111,8 @@ public class RestServerStarter {
         final ResourceHandler swaggeruiresourcehandler = new ResourceHandler();
         swaggeruiresourcehandler.setResourceBase(RestServerStarter.class.getClassLoader().getResource("dist").toURI().toString());
         final ContextHandler swaggerUIContext = new ContextHandler();
-        swaggerUIContext.setContextPath("/docs/");
+        //swaggerUIContext.setContextPath("/docs/");
+        swaggerUIContext.setContextPath("/docs");
         swaggerUIContext.setHandler(swaggeruiresourcehandler);
         return swaggerUIContext;
     }
@@ -123,41 +123,43 @@ public class RestServerStarter {
         try {
             plugins = PluginLoader.loadPlugins(new File("./plugins"));
 
-            System.out.println("Found Plugins:");
-            for (String s :
-                    Objects.requireNonNull(new File("./plugins").list(new JarFilenameFilter()))) {
-                System.out.println(s);
-            }
-            for (Pluggable hs :
-                    plugins) {
-                RestServerStarter.hs = hs;
-                hs.start();
-                try {
-                    instituteList.add(hs.getInstitute());
-                    studiengangList.addAll(hs.getCurriculli());
-
-                    ThreadCreator threadCreator = ThreadCreator.instantiate();
-                    threadCreator.doJob(studiengangList);
-                    threadCreator.doJob(veranstaltungList);
+            if (!plugins.isEmpty()) {
+                System.out.println("Found Plugins:");
+                for (String s :
+                        new File("./plugins").list(new JarFilenameFilter())) {
+                    System.out.println(s);
                 }
-                catch (IOException e){
-                    System.err.println("Fatal error while gathering data. Exiting.");
-                    System.exit(1);
+                for (Pluggable hs :
+                        plugins) {
+                    RestServerStarter.hs = hs;
+                    hs.start();
+                    try {
+                        instituteList.add(hs.getInstitute());
+                        studiengangList.addAll(hs.getCurriculli());
+
+                        ThreadCreator threadCreator = ThreadCreator.instantiate();
+                        threadCreator.doJob(studiengangList);
+                        threadCreator.doJob(veranstaltungList);
+                    } catch (IOException e) {
+                        System.err.println("Fatal error while gathering data. Exiting.");
+                        System.exit(1);
+                    }
+
+                    dbHandler.clearDatabase();
+                    dbHandler.putIntoDatabase(instituteList, studiengangList,
+                            veranstaltungList, terminList);
+
+                    instituteList.clear();
+                    studiengangList.clear();
+                    veranstaltungList.clear();
+                    terminList.clear();
                 }
-
-                dbHandler.clearDatabase();
-                dbHandler.putIntoDatabase(instituteList, studiengangList,
-                        veranstaltungList, terminList);
-
-                instituteList.clear();
-                studiengangList.clear();
-                veranstaltungList.clear();
-                terminList.clear();
             }
-        } catch (IOException e) {
-            System.err.println("No plugins found. Exiting.");
-            System.exit(1);
-        }
+
+            } catch(IOException e){
+                System.err.println("No plugins found. Exiting.");
+                System.exit(1);
+            }
 
     }
 }

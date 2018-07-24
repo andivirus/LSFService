@@ -17,12 +17,15 @@ import java.util.jar.JarInputStream;
 public class PluginLoader {
 
     public static List<Pluggable> loadPlugins(File directory) throws IOException {
-        //TODO: ÜBER LAMBDAS LERNEN
-        System.out.println("KEK " + directory.getAbsolutePath());
+        System.out.println("Searching for plugins in directory: " + directory.getAbsolutePath());
         File[] plugJars = directory.listFiles(new JarFileFilter());
-        ClassLoader cl = new URLClassLoader(fileArrayToURLArray(plugJars));
-        List<Class<Pluggable>> plugClasses = extractClassesFromJARs(plugJars, cl);
-        return createPluggableObjects(plugClasses);
+        if(plugJars != null){
+            ClassLoader cl = new URLClassLoader(fileArrayToURLArray(plugJars));
+            List<Class<Pluggable>> plugClasses = extractClassesFromJARs(plugJars, cl);
+            return createPluggableObjects(plugClasses);
+        }
+        System.err.println("No plugins found!");
+        return new ArrayList<>();
     }
 
     private static URL[] fileArrayToURLArray(File[] files) throws MalformedURLException{
