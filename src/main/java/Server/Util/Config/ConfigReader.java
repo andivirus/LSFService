@@ -71,14 +71,27 @@ public class ConfigReader {
 
         System.out.print("Please enter port (default: 8090): ");
         try {
-            int in_val = 0;
             input = sc.nextLine();
-            Integer.valueOf(input);
+            int in_val = Integer.valueOf(input);
             properties.setProperty(HOSTPORT, String.valueOf(in_val));
         }
         catch (NumberFormatException e){
             System.out.println("No port specified, defaulting to 8090.");
             properties.setProperty(HOSTPORT, "8090");
+        }
+
+        System.out.print("Please enter update time, values between 0 and 23 (inclusive) valid (default: 5)");
+        try {
+            input = sc.nextLine();
+            int in_val = Integer.valueOf(input);
+            if(in_val < 0 || in_val > 23){
+                throw new NumberFormatException();
+            }
+            properties.setProperty(UPDATE_TIME, String.valueOf(in_val));
+        }
+        catch (NumberFormatException e){
+            System.out.println("No valid time specified, defaulting to 05:00");
+            properties.setProperty(UPDATE_TIME, "5");
         }
 
         try {

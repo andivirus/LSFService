@@ -187,8 +187,10 @@ public class RestServerStarter {
         @Override
         public void run() {
             initDatabase(dbHandler);
+
+            int updatehour = Integer.valueOf(ConfigReader.instance().getProperty(ConfigReader.UPDATE_TIME));
             LocalDateTime now = LocalDateTime.now();
-            LocalTime target = LocalTime.now().withHour(5).withMinute(0).withSecond(0).withNano(0);
+            LocalTime target = LocalTime.now().withHour(updatehour).withMinute(0).withSecond(0).withNano(0);
 
             LocalDateTime targetDateTime = target.atDate(LocalDate.now());
             if(now.toLocalTime().isAfter(target)) {
@@ -198,7 +200,6 @@ public class RestServerStarter {
             Duration timespan = Duration.between(now, targetDateTime);
 
             System.out.println("Next update: " + targetDateTime);
-            System.out.println("Timespan: " + timespan.toString());
 
             scheduler.schedule(new DBUpdater(dbHandler), timespan.getSeconds(), TimeUnit.SECONDS);
         }
