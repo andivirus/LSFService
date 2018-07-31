@@ -20,7 +20,6 @@ public class LSFResourcev2 extends LSFResourcev1 {
 
     public LSFResourcev2(){
         super();
-
     }
 
     @Override

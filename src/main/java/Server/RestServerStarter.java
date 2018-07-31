@@ -39,11 +39,11 @@ import java.util.concurrent.TimeUnit;
 
 
 public class RestServerStarter {
-    public static Pluggable hs;
-    public static final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
-    public static final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
-    public static final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
-    public static final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
+    private static Pluggable hs;
+    private static final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
+    private static final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
+    private static final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
+    private static final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -51,6 +51,7 @@ public class RestServerStarter {
     public static void main(String[] args) {
         if(Arrays.asList(args).contains("-h")){
             System.out.println("--noupdate : does not recreate the database upon start, even if its old");
+            System.out.println("-h : Displays this message");
             System.exit(0);
         }
         new RestServerStarter(args);
@@ -63,9 +64,13 @@ public class RestServerStarter {
         if(!Arrays.asList(args).contains("--noupdate")) {
             dbHandler.createDatabase();
                 if (dbHandler.isUpdateNecessary()) {
-                    //initDatabase(dbHandler);
                     ScheduledFuture<?> task = scheduler.schedule(new DBUpdater(dbHandler), 1, TimeUnit.SECONDS);
                     while(true){
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         if(task.isDone()){
                             break;
                         }
@@ -75,7 +80,7 @@ public class RestServerStarter {
         }
         long end = System.currentTimeMillis();
 
-        System.out.println("This took: " + (end - begin) / 1000);
+        //System.out.println("This took: " + (end - begin) / 1000);
 
         try {
             System.out.println("Starting Server");
@@ -127,7 +132,6 @@ public class RestServerStarter {
         final ResourceHandler swaggeruiresourcehandler = new ResourceHandler();
         swaggeruiresourcehandler.setResourceBase(RestServerStarter.class.getClassLoader().getResource("dist").toURI().toString());
         final ContextHandler swaggerUIContext = new ContextHandler();
-        //swaggerUIContext.setContextPath("/docs/");
         swaggerUIContext.setContextPath("/docs");
         swaggerUIContext.setHandler(swaggeruiresourcehandler);
         return swaggerUIContext;
@@ -145,35 +149,88 @@ public class RestServerStarter {
                         new File("./plugins").list(new JarFilenameFilter())) {
                     System.out.println(s);
                 }
+
+                LinkedList<Thread> threads = new LinkedList<>();
                 for (Pluggable hs :
                         plugins) {
                     RestServerStarter.hs = hs;
-                    hs.start();
-                    try {
-                        instituteList.add(hs.getInstitute());
-                        studiengangList.addAll(hs.getCurriculli());
+                    //hs.start();
 
-                        ThreadCreator threadCreator = ThreadCreator.instantiate();
-                        threadCreator.doJob(studiengangList);
-                        threadCreator.doJob(veranstaltungList);
-                    } catch (IOException e) {
-                        System.err.println("Fatal error while gathering data. Exiting.");
-                        System.exit(1);
-                    }
-
-                    dbHandler.clearDatabase();
-                    dbHandler.putIntoDatabase(instituteList, studiengangList,
-                            veranstaltungList, terminList);
-
-                    instituteList.clear();
-                    studiengangList.clear();
-                    veranstaltungList.clear();
-                    terminList.clear();
+                    threads.add(new Thread(new HSTask(hs), hs.getInstitute().getName()));
                 }
+
+                for (Thread t :
+                        threads) {
+                    t.start();
+                }
+
+                for (Thread t :
+                        threads) {
+                    t.join();
+                }
+
+
+                dbHandler.clearDatabase();
+                dbHandler.putIntoDatabase(instituteList, studiengangList,
+                        veranstaltungList, terminList);
+
+                instituteList.clear();
+                studiengangList.clear();
+                veranstaltungList.clear();
+                terminList.clear();
+                threads.clear();
             }
         } catch(IOException e){
             System.err.println("No plugins found. Exiting.");
             System.exit(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public class HSTask implements Runnable {
+        private Pluggable hs;
+        public final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
+        public final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
+        public final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
+        public final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
+
+        HSTask(Pluggable hs){
+            this.hs = hs;
+        }
+
+        @Override
+        public void run() {
+            //System.out.println("THREAD NAME: " + Thread.currentThread().getName());
+            try {
+                hs.start();
+                instituteList.add(hs.getInstitute());
+                studiengangList.addAll(hs.getCurriculli());
+
+                ThreadCreator threadCreator = ThreadCreator.instantiate();
+
+                threadCreator.doJob(studiengangList, hs, this);
+                threadCreator.doJob(veranstaltungList, hs, this);
+
+                synchronized (RestServerStarter.instituteList){
+                    RestServerStarter.instituteList.addAll(instituteList);
+                }
+                synchronized (RestServerStarter.studiengangList){
+                    RestServerStarter.studiengangList.addAll(studiengangList);
+                }
+                synchronized (RestServerStarter.veranstaltungList){
+                    RestServerStarter.veranstaltungList.addAll(veranstaltungList);
+                }
+                synchronized (RestServerStarter.terminList){
+                    RestServerStarter.terminList.addAll(terminList);
+                }
+
+                hs.stop();
+
+            } catch (IOException e) {
+                System.err.println("Fatal error while gathering data. Exiting.");
+                System.exit(1);
+            }
         }
     }
 

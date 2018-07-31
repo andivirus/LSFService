@@ -40,6 +40,9 @@ public class LSFResourcev1 implements LSFContract {
             while (resultSet.next()){
                 responseList.add(new Institute(resultSet.getString("id"), resultSet.getString("Name")));
             }
+            if(responseList.isEmpty()){
+                return Response.status(404).build();
+            }
             GenericEntity<List<Institute>> myEntity = new GenericEntity<List<Institute>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
         } catch (SQLException e) {
@@ -59,6 +62,9 @@ public class LSFResourcev1 implements LSFContract {
             while (resultSet.next()){
                 responseList.add(new Studiengang(resultSet.getInt("id"),
                         resultSet.getString("Name"), resultSet.getString("instituteid")));
+            }
+            if(responseList.isEmpty()) {
+                return Response.status(404).build();
             }
             GenericEntity<List<Studiengang>> myEntity = new GenericEntity<List<Studiengang>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
@@ -83,6 +89,9 @@ public class LSFResourcev1 implements LSFContract {
                         resultSet.getString("instituteid"),
                         resultSet.getInt("stdgid"),
                         resultSet.getString("Name")));
+            }
+            if(responseList.isEmpty()) {
+                return Response.status(404).build();
             }
             GenericEntity<List<Veranstaltung>> myEntity = new GenericEntity<List<Veranstaltung>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
@@ -110,6 +119,9 @@ public class LSFResourcev1 implements LSFContract {
                         resultSet.getDate("end_datum"), resultSet.getString("raum"),
                         resultSet.getString("prof"), resultSet.getString("bemerkung"), resultSet.getString("art"), resultSet.getString("ausfall")));
             }
+            if(responseList.isEmpty()) {
+                return Response.status(404).build();
+            }
             GenericEntity<Set<Termin>> myEntity = new GenericEntity<Set<Termin>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
         } catch (SQLException e) {
@@ -135,6 +147,9 @@ public class LSFResourcev1 implements LSFContract {
                     LectureReconstructor.createCalendar(resultSet.getTimestamp("end_zeit")), resultSet.getDate("start_datum"),
                     resultSet.getDate("end_datum"), resultSet.getString("raum"),
                     resultSet.getString("prof"), resultSet.getString("bemerkung"), resultSet.getString("art"), resultSet.getString("ausfall")));
+            if(responseList.isEmpty()) {
+                return Response.status(404).build();
+            }
             GenericEntity<Set<Termin>> myEntity = new GenericEntity<Set<Termin>>(responseList) {};
             return Response.status(200).entity(myEntity).build();
         } catch (SQLException e) {

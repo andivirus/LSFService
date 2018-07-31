@@ -1,6 +1,9 @@
 package Server.Util.Threading;
 
 
+import Server.RestServerStarter;
+import lsfserver.api.Pluggable;
+
 import java.util.*;
 
 public class ThreadCreator {
@@ -19,13 +22,12 @@ public class ThreadCreator {
         return singleton;
     }
 
-    public <T> void doJob(List<T> e){
+    public <T> void doJob(List<T> e, Pluggable hs, RestServerStarter.HSTask target){
         Set<Thread> threaders = new HashSet<>();
-        int i = 0;
+        final int coure_count = Runtime.getRuntime().availableProcessors();
         for (List<T> split :
-                split(e, 4)) {
-            threaders.add(new Thread(new GenericThreader(split, i)));
-            i++;
+                split(e, coure_count)) {
+            threaders.add(new Thread(new GenericThread(split, hs, target)));
         }
         for (Thread t :
                 threaders) {
@@ -44,14 +46,12 @@ public class ThreadCreator {
     private <T> List<List<T>> split(List<T> list, final int number){
         List<List<T>> parts = new ArrayList<>();
         int size = (int) Math.ceil(list.size() / number);
-        System.out.println(size);
         for (int start = 0; start < list.size(); start += size) {
             int end = Math.min(start + size, list.size());
             List<T> sublist = list.subList(start, end);
             parts.add(new ArrayList<>(sublist));
         }
 
-        System.out.println("Size of parts list: " + parts.size());
         return parts;
     }
 }

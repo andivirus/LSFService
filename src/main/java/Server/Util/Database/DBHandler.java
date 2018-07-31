@@ -8,6 +8,7 @@ import lsfserver.api.Institute.Termin;
 
 import java.io.File;
 import java.sql.*;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,7 @@ public class DBHandler {
     }
 
     public boolean isUpdateNecessary() {
-        long begin = System.currentTimeMillis();
+        final long day = 1000L * 60 * 60 * 24;
 
         try {
             Connection connection = DriverManager.getConnection(DB_URL);
@@ -46,13 +47,13 @@ public class DBHandler {
                 while (resultSet.next()) {
                     System.out.println("LastUpdate: " + resultSet.getTimestamp(1).toString());
                     System.out.println("Current Time:  " + new java.util.Date().toString());
-                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000)) {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000));
+                    if (System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < day) {
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < day);
                         System.out.println("Skipping Database input");
                         lastupdate.close();
                         return false;
                     } else {
-                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < (120 * 60 * 1000));
+                        System.out.println(System.currentTimeMillis() - resultSet.getTimestamp(1).getTime() < day);
                         lastupdate.close();
                         return true;
                     }
@@ -68,7 +69,6 @@ public class DBHandler {
     }
 
     public void createDatabase(){
-        //File dir = new File("database");
         File dir = new File(ConfigReader.instance().getProperty(ConfigReader.DATABASE_PATH)).getParentFile();
         if(!dir.getParentFile().canWrite() || !dir.getParentFile().canRead()){
             System.out.println(dir.getParentFile().getPath());

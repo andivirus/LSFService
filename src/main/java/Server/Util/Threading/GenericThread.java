@@ -3,15 +3,20 @@ package Server.Util.Threading;
 import Server.RestServerStarter;
 import lsfserver.api.Institute.Studiengang;
 import lsfserver.api.Institute.Veranstaltung;
+import lsfserver.api.Pluggable;
 
 import java.util.List;
 
-public class GenericThreader implements Runnable{
+public class GenericThread implements Runnable{
     private List<?> innerCollection;
+    RestServerStarter.HSTask target;
+    private Pluggable hs;
 
-    public GenericThreader(List<?> list, final int i){
+    public GenericThread(List<?> list, Pluggable hs, RestServerStarter.HSTask target){
         innerCollection = list;
-        System.out.println("GenericThread " + i);
+        this.target = target;
+        this.hs = hs;
+        //System.out.println("GenericThread " + Thread.currentThread().getName());
     }
 
     @Override
@@ -33,14 +38,14 @@ public class GenericThreader implements Runnable{
                 innerCollection) {
             if(type == STUDIENGANG){
                 Studiengang s = (Studiengang) o;
-                synchronized (RestServerStarter.veranstaltungList) {
-                    RestServerStarter.veranstaltungList.addAll(RestServerStarter.hs.getLectures(s.getId()));
+                synchronized (target.veranstaltungList) {
+                    target.veranstaltungList.addAll(hs.getLectures(s.getId()));
                 }
             }
             if(type == VERANSTALTUNG){
                 Veranstaltung va = (Veranstaltung) o;
-                synchronized (RestServerStarter.terminList) {
-                    RestServerStarter.terminList.addAll(RestServerStarter.hs.getLectureTimes(va.getName(), va.getId()));
+                synchronized (target.terminList) {
+                    target.terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
                 }
             }
         }

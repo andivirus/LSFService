@@ -141,7 +141,6 @@ public class HSWorms implements Pluggable {
      */
     @Override
     public List<Veranstaltung> getLectures(int stdgid){
-        //TODO: Dynamischer machen, das Programm selbst auf den Link für Studiengangliste klicken lassen
         String url = "https://lsf.hs-worms.de/qisserver/rds?state=wplan&missing=allTerms&k_parallel.parallelid=" +
                 "&k_abstgv.abstgvnr=" + stdgid + "&act=stg" +
                 "&pool=stg&show=liste&P.vx=kurz&P.subc=plan";
@@ -267,7 +266,6 @@ public class HSWorms implements Pluggable {
                                 case (9):
                                     terminHelper.bemerkung = spalte.text();
                                     break;
-                                //TODO: Ausfall implementieren
                                 case (10):
                                     terminHelper.ausfall = spalte.text();
                             }
