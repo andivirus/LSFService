@@ -182,6 +182,7 @@ public class RestServerStarter {
             }
         } catch(IOException e){
             System.err.println("No plugins found. Exiting.");
+            e.printStackTrace();
             System.exit(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
