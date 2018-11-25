@@ -42,8 +42,6 @@ public class RestServerStarter {
     private static Pluggable hs;
     private static final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
     private static final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
-    private static final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
-    private static final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -65,16 +63,13 @@ public class RestServerStarter {
             dbHandler.createDatabase();
                 if (dbHandler.isUpdateNecessary()) {
                     ScheduledFuture<?> task = scheduler.schedule(new DBUpdater(dbHandler), 1, TimeUnit.SECONDS);
-                    while(true){
+                    do {
                         try {
                             Thread.sleep(10);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        if(task.isDone()){
-                            break;
-                        }
-                    }
+                    } while (!task.isDone());
                 }
 
         }
@@ -171,13 +166,13 @@ public class RestServerStarter {
 
 
                 dbHandler.clearDatabase();
-                dbHandler.putIntoDatabase(instituteList, studiengangList,
-                        veranstaltungList, terminList);
+                dbHandler.putInstitutesIntoDatabase(instituteList);
+                dbHandler.putStudiengangIntoDatabase(studiengangList);
+
+                dbHandler.setTimestampInDatabase();
 
                 instituteList.clear();
                 studiengangList.clear();
-                veranstaltungList.clear();
-                terminList.clear();
                 threads.clear();
             }
         } catch(IOException e){
@@ -191,10 +186,8 @@ public class RestServerStarter {
 
     public class HSTask implements Runnable {
         private Pluggable hs;
-        public final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
-        public final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
-        public final List<Veranstaltung> veranstaltungList = Collections.synchronizedList(new LinkedList<>());
-        public final List<Termin> terminList = Collections.synchronizedList(new LinkedList<>());
+        private final List<Institute> instituteList = Collections.synchronizedList(new LinkedList<>());
+        private final List<Studiengang> studiengangList = Collections.synchronizedList(new LinkedList<>());
 
         HSTask(Pluggable hs){
             this.hs = hs;
@@ -209,21 +202,13 @@ public class RestServerStarter {
                 studiengangList.addAll(hs.getCurriculli());
 
                 ThreadCreator threadCreator = ThreadCreator.instantiate();
-
-                threadCreator.doJob(studiengangList, hs, this);
-                threadCreator.doJob(veranstaltungList, hs, this);
+                threadCreator.doJob(studiengangList, hs);
 
                 synchronized (RestServerStarter.instituteList){
                     RestServerStarter.instituteList.addAll(instituteList);
                 }
                 synchronized (RestServerStarter.studiengangList){
                     RestServerStarter.studiengangList.addAll(studiengangList);
-                }
-                synchronized (RestServerStarter.veranstaltungList){
-                    RestServerStarter.veranstaltungList.addAll(veranstaltungList);
-                }
-                synchronized (RestServerStarter.terminList){
-                    RestServerStarter.terminList.addAll(terminList);
                 }
 
                 hs.stop();

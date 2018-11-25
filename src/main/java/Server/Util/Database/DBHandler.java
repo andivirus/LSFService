@@ -8,24 +8,29 @@ import lsfserver.api.Institute.Termin;
 
 import java.io.File;
 import java.sql.*;
+import java.sql.Date;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DBHandler {
 
     public static String DB_URL;
 
     private static DBHandler singleton;
+    private Connection connection;
 
     private DBHandler(String url) {
         DB_URL = "jdbc:sqlite:" + url;
+        try {
+            connection = DriverManager.getConnection(DB_URL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static synchronized DBHandler getInstance(String url){
-        if(singleton == null){
+    public static synchronized DBHandler getInstance(String url) {
+        if (singleton == null) {
             singleton = new DBHandler(url);
         }
         return singleton;
@@ -35,7 +40,6 @@ public class DBHandler {
         final long day = 1000L * 60 * 60 * 24;
 
         try {
-            Connection connection = DriverManager.getConnection(DB_URL);
             Statement statement = connection.createStatement();
             ResultSet rowcountset = statement.executeQuery("SELECT COUNT(*) as rowcount FROM Settings");
             rowcountset.next();
@@ -68,22 +72,21 @@ public class DBHandler {
         return false;
     }
 
-    public void createDatabase(){
+    public void createDatabase() {
         File dir = new File(ConfigReader.instance().getProperty(ConfigReader.DATABASE_PATH)).getParentFile();
-        if(!dir.getParentFile().canWrite() || !dir.getParentFile().canRead()){
+        if (!dir.getParentFile().canWrite() || !dir.getParentFile().canRead()) {
             System.out.println(dir.getParentFile().getPath());
             System.err.println("Cant write and/or read files from database directory.");
             System.err.println("Please fix permissions or change the database directory");
             System.exit(1);
         }
         dir.mkdir();
-        Connection connection = null;
+        //Connection connection = null;
         Statement statement = null;
 
         System.out.println("Creating Database...");
 
         try {
-            connection = DriverManager.getConnection(DB_URL);
             statement = connection.createStatement();
             connection.setAutoCommit(false);
 
@@ -127,12 +130,10 @@ public class DBHandler {
         }
     }
 
-    public void putIntoDatabase(Collection<Institute> instituteList, Collection<Studiengang> studiengangList,
-                                Collection<Veranstaltung> veranstaltungList, Collection<Termin> terminList){
+    public void putInstitutesIntoDatabase(Collection<Institute> instituteList) {
         try {
-            Connection connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(false);
-            System.out.println("Putting data into database...");
+            System.out.println(Thread.currentThread().getName() + "\n" + "Putting Institutes into database...");
 
             PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Settings VALUES (?, 1)");
             statement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
@@ -150,8 +151,18 @@ public class DBHandler {
             statement.close();
             connection.commit();
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void putStudiengangIntoDatabase(Collection<Studiengang> studiengangList) {
+        try {
+            connection.setAutoCommit(false);
+            System.out.println(Thread.currentThread().getName() + "\n" + "Putting Studiengaenge into database...");
+
             System.out.println(studiengangList.size());
-            statement = connection.prepareStatement("INSERT OR REPLACE INTO Studiengaenge VALUES (?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Studiengaenge VALUES (?, ?, ?)");
             for (Studiengang s :
                     studiengangList) {
                 statement.setInt(1, s.getId());
@@ -163,11 +174,21 @@ public class DBHandler {
             statement.close();
             connection.commit();
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void putVeranstaltungenIntoDatabase(Collection<Veranstaltung> veranstaltungList) {
+
+        try {
+            connection.setAutoCommit(false);
+            System.out.println(Thread.currentThread().getName() + "\n" + "Putting Veranstaltungen into database...");
+
             System.out.println(veranstaltungList.size());
-            Set<Veranstaltung> veranstaltungSet = new HashSet<>();
-            veranstaltungSet.addAll(veranstaltungList);
+            Set<Veranstaltung> veranstaltungSet = new HashSet<>(veranstaltungList);
             System.out.println(veranstaltungSet.size());
-            statement = connection.prepareStatement("INSERT OR REPLACE INTO Veranstaltung VALUES (?, ?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Veranstaltung VALUES (?, ?, ?, ?)");
             for (Veranstaltung v :
                     veranstaltungSet) {
                 statement.setInt(1, v.getId());
@@ -180,8 +201,18 @@ public class DBHandler {
             statement.close();
             connection.commit();
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void putTermineIntoDatabase(Collection<Termin> terminList) {
+        try {
+            connection.setAutoCommit(false);
+            System.out.println(Thread.currentThread().getName() + "\n" + "Putting Termine into database...");
+
             System.out.println(terminList.size());
-            statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Termin VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             for (Termin t :
                     terminList) {
                 statement.setInt(1, t.getId());
@@ -191,9 +222,9 @@ public class DBHandler {
                 statement.setInt(5, t.getTag());
                 statement.setTime(6, new Time(t.getStart_zeit().getTime().getTime()));
                 statement.setTime(7, new Time(t.getEnd_zeit().getTime().getTime()));
-                if(t.getStart_datum() != null)
+                if (t.getStart_datum() != null)
                     statement.setDate(8, new Date(t.getStart_datum().getTime()));
-                if(t.getEnd_datum() != null)
+                if (t.getEnd_datum() != null)
                     statement.setDate(9, new Date(t.getEnd_datum().getTime()));
                 statement.setString(10, t.getRaum());
                 statement.setString(11, t.getProf());
@@ -204,21 +235,31 @@ public class DBHandler {
             }
             statement.executeBatch();
             statement.close();
-
-            statement = connection.prepareStatement("INSERT OR REPLACE INTO Settings VALUES (?, 1)");
-            statement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            statement.executeUpdate();
-            statement.close();
-            connection.commit();
-            System.out.println("Finished putting data into database!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void clearDatabase(){
-        try{
-            Connection connection = DriverManager.getConnection(DB_URL);
+    public int setTimestampInDatabase() {
+        int result = 0;
+        try {
+            connection.setAutoCommit(false);
+            System.out.println(Thread.currentThread().getName() + "\n" + "Setting timestamp");
+
+            PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO Settings VALUES (?, 1)");
+            statement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            result = statement.executeUpdate();
+            statement.close();
+            connection.commit();
+            return result;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public void clearDatabase() {
+        try {
             Statement statement = connection.createStatement();
             statement.executeUpdate("DELETE FROM Termin");
             statement.executeUpdate("DELETE FROM Veranstaltung");

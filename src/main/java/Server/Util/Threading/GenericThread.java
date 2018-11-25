@@ -1,53 +1,40 @@
 package Server.Util.Threading;
 
 import Server.RestServerStarter;
+import Server.Util.Database.DBHandler;
 import lsfserver.api.Institute.Studiengang;
+import lsfserver.api.Institute.Termin;
 import lsfserver.api.Institute.Veranstaltung;
 import lsfserver.api.Pluggable;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class GenericThread implements Runnable{
     private List<?> innerCollection;
-    RestServerStarter.HSTask target;
     private Pluggable hs;
 
-    public GenericThread(List<?> list, Pluggable hs, RestServerStarter.HSTask target){
+    public GenericThread(List<?> list, Pluggable hs){
         innerCollection = list;
-        this.target = target;
         this.hs = hs;
-        //System.out.println("GenericThread " + Thread.currentThread().getName());
     }
 
     @Override
     public void run(){
-        final int STUDIENGANG = 0;
-        final int VERANSTALTUNG = 1;
-        int type = -1;
+        LinkedList<Veranstaltung> veranstaltungList = new LinkedList<>();
+        LinkedList<Termin> terminList = new LinkedList<>();
+        DBHandler dbHandler = DBHandler.getInstance(DBHandler.DB_URL);
         for (Object o :
                 innerCollection) {
-            if(o instanceof Studiengang){
-                type = STUDIENGANG;
-            }
-            else if (o instanceof Veranstaltung){
-                type = VERANSTALTUNG;
-            }
-            break;
-        }
-        for (Object o :
-                innerCollection) {
-            if(type == STUDIENGANG){
                 Studiengang s = (Studiengang) o;
-                synchronized (target.veranstaltungList) {
-                    target.veranstaltungList.addAll(hs.getLectures(s.getId()));
-                }
-            }
-            if(type == VERANSTALTUNG){
-                Veranstaltung va = (Veranstaltung) o;
-                synchronized (target.terminList) {
-                    target.terminList.addAll(hs.getLectureTimes(va.getName(), va.getId()));
-                }
-            }
+                veranstaltungList.addAll(hs.getLectures(s.getId()));
+
         }
+        dbHandler.putVeranstaltungenIntoDatabase(veranstaltungList);
+        for (Veranstaltung va :
+                veranstaltungList) {
+            terminList = new LinkedList<>(hs.getLectureTimes(va.getName(), va.getId()));
+        }
+        dbHandler.putTermineIntoDatabase(terminList);
     }
 }

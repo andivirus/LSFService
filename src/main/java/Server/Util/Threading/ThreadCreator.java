@@ -22,12 +22,12 @@ public class ThreadCreator {
         return singleton;
     }
 
-    public <T> void doJob(List<T> e, Pluggable hs, RestServerStarter.HSTask target){
+    public <T> void doJob(List<T> e, Pluggable hs){
         Set<Thread> threaders = new HashSet<>();
         final int coure_count = Runtime.getRuntime().availableProcessors();
         for (List<T> split :
                 split(e, coure_count)) {
-            threaders.add(new Thread(new GenericThread(split, hs, target)));
+            threaders.add(new Thread(new GenericThread(split, hs)));
         }
         for (Thread t :
                 threaders) {
